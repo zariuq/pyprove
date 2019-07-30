@@ -36,15 +36,18 @@ def cmd(f_problem, proto, limit, ebinary=None, eargs=None):
 
 def run(f_problem, proto, limit, f_out=None, ebinary=None, eargs=None):
    cmd0 = cmd(f_problem, proto, limit, ebinary, eargs)
+   env0 = dict(os.environ)
+   env0["OMP_NUM_THREADS"] = "1"
+
    if f_out:
-      out = file(f_out,"w")
-      env0 = dict(os.environ)
-      env0["OMP_NUM_THREADS"] = "1"
-      subprocess.call(cmd0, shell=True, stdout=out, stderr=STDOUT, env=env0)
-      out.close()
+      with file(f_out,"w") as out:
+         ret = subprocess.call(cmd0, shell=True, stdout=out, stderr=STDOUT, env=env0)
+         if ret != 0:
+            print "ERROR: eprover return code %s" % ret
+            return False
       return True
    else:
-      return subprocess.check_output(cmd0, shell=True, stderr=STDOUT)
+      return subprocess.check_output(cmd0, shell=True, stderr=STDOUT, env=env0)
 
 def cnf(f_problem):
    cmd0 = "%s --tstp-format --free-numbers --cnf %s" % (E_BIN,f_problem)
