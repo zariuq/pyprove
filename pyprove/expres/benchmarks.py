@@ -45,6 +45,7 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None):
    res = dict(zip(jobs, res))
    solvedb.update(res)
    pool.close()
+   pool.join()
    return res
 
 def solved(bid, pids, limit, cores=4, force=False):
