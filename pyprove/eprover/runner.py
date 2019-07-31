@@ -41,11 +41,7 @@ def run(f_problem, proto, limit, f_out=None, ebinary=None, eargs=None):
 
    if f_out:
       with file(f_out,"w") as out:
-         ret = subprocess.call(cmd0, shell=True, stdout=out, stderr=STDOUT, env=env0)
-         if ret != 0:
-            print "ERROR: eprover return code %s" % ret
-            return False
-      return True
+         return subprocess.call(cmd0, shell=True, stdout=out, stderr=STDOUT, env=env0)
    else:
       return subprocess.check_output(cmd0, shell=True, stderr=STDOUT, env=env0)
 
