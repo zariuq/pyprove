@@ -1,9 +1,9 @@
-import results
-import solved
-import protos
-import benchmarks
-import details
-import summary
-import dump
-import html
-import jsdata
+from . import results
+from . import solved
+from . import protos
+from . import benchmarks
+from . import details
+from . import summary
+from . import dump
+from . import html
+from . import jsdata

@@ -42,7 +42,7 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None):
    pool = Pool(cores)
    res = pool.map_async(runjob if not force else runjob_force, jobs).get(365*24*3600)
    jobs = [x[0:4] for x in jobs]
-   res = dict(zip(jobs, res))
+   res = dict(list(zip(jobs, res)))
    solvedb.update(res)
    pool.close()
    pool.join()
@@ -56,8 +56,8 @@ def solved(bid, pids, limit, cores=4, force=False):
 def get(bid, pids, limit):
    probs = problems(bid)
    rkeys = [(bid,pid,problem,limit) for pid in pids for problem in probs]
-   print "Loading %d results ..." % len(rkeys)
+   print("Loading %d results ..." % len(rkeys))
    ret = {rkey:results.load(*rkey) for rkey in rkeys if results.exists(*rkey)}
-   print "done."
+   print("done.")
    return ret
 

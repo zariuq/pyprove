@@ -72,7 +72,7 @@ def processed(bid, pids, results, exp="results", data="data"):
 
    f_js = path(os.path.join(exp, "data", data+".js"))
    leg = dict(enumerate(pids))
-   header = ["problem"]+leg.keys()
+   header = ["problem"]+list(leg.keys())
    rows = [[d[0]]+[proc[d][pid] for pid in pids] for d in sorted(proc)]
    jsdata.save(f_js, data, header, {}, rows, leg)
 

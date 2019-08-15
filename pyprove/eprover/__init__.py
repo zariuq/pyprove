@@ -1,3 +1,3 @@
-import runner
-import result
+from . import runner
+from . import result
 

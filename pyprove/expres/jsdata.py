@@ -28,7 +28,7 @@ def update(f_js, var, rows, key=None):
       raise Exception("Keys are not unique!")
 
    olds = js["DATA"]
-   for i in xrange(len(olds)):
+   for i in range(len(olds)):
       row = olds[i]
       k = key(row)
       if k in new:

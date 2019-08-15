@@ -28,7 +28,7 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
       cache[0] = now
    
    msg = ("[%s] %s" % (now-cache[0], msg)) if timestamp else msg
-   print msg
+   print(msg)
    if PREFIX:
       f = file(cache[1],"a")
       f.write(msg+"\n")
