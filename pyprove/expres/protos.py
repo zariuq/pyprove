@@ -11,10 +11,10 @@ def path(pid):
    return os.path.join(root, pid)
 
 def load(pid):
-   return file(path(pid)).read().strip()
+   return open(path(pid)).read().strip()
 
 def save(pid, proto):
    f_pid = path(pid)
    os.system("mkdir -p %s" % os.path.dirname(f_pid))
-   file(f_pid,"w").write(proto.strip())
+   open(f_pid,"w").write(proto.strip())
 

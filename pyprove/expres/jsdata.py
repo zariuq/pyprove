@@ -9,10 +9,10 @@ def save(f_js, var, header, classes, rows, leg=None):
    js["DATA"] = rows
    if leg:
       js["LEGEND"] = leg
-   file(f_js,"w").write("var %s = %s;" % (var,json.dumps(js)))
+   open(f_js,"w").write("var %s = %s;" % (var,json.dumps(js)))
 
 def load(f_js):
-   js = file(f_js).read().strip().rstrip(";")
+   js = open(f_js).read().strip().rstrip(";")
    js = js[js.index("=")+1:]
    return json.loads(js)
 

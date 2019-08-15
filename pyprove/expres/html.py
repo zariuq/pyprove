@@ -58,7 +58,7 @@ def end(out):
 def create(exp, data):
    f_out = path(os.path.join(exp, data+".html"))
    os.system("mkdir -p %s" % os.path.dirname(f_out))
-   out = file(f_out, "w")
+   out = open(f_out, "w")
    return out
 
 def processed(bid, pids, results, exp="results", data="data"): 
