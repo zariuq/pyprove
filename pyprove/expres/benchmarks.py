@@ -1,5 +1,6 @@
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 import os
+from progress.bar import FillingCirclesBar as Bar
 
 from .. import eprover, log
 from . import protos, results
@@ -26,27 +27,33 @@ def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
    return results.load(bid, pid, problem, limit)
 
 def runjob(job):
-   return compute(job[0], job[1], job[2], job[3], ebinary=job[4], eargs=job[5])
+   queue = job[7]
+   res = compute(*job[0:7])
+   queue.put((job[0:4],res))
+   return res
 
-def runjob_force(job):
-   return compute(job[0], job[1], job[2], job[3], force=True, ebinary=job[4], eargs=job[5])
-
-def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None):
+def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **others):
    probs = problems(bid)
-   if isinstance(limit, int):
-      eta = "ETA %ds" % (float(len(pids))*len(probs)*limit/cores)
-   else:
-      eta = "%d jobs/cpu" % (float(len(pids))*len(probs)/cores)
-   log.msg("Evaluating %s protos @ %s (%d) @ limit %s @ %s cores: %s" % (len(pids), bid, len(probs), limit, cores, eta))
-   jobs = [(bid,pid,problem,limit,ebinary,eargs) for pid in pids for problem in probs]
+   log.msg("+ evaluating %s strategies @ %s (%d problems) @ limit %s @ %s cores" % (len(pids), bid, len(probs), limit, cores))
    pool = Pool(cores)
-   res = pool.map_async(runjob if not force else runjob_force, jobs).get(365*24*3600)
-   jobs = [x[0:4] for x in jobs]
-   res = dict(list(zip(jobs, res)))
-   solvedb.update(res)
+   m = Manager()
+   queue = m.Queue()
+   ret = {}
+   for (n,pid) in enumerate(pids,start=1):
+      jobs = [(bid,pid,problem,limit,force,ebinary,eargs,queue) for problem in probs]
+      bar = Bar("(%s/%s)"%(n,len(pids)), max=len(jobs), suffix="%(percent).1f%% / %(elapsed_td)s / ETA %(eta_td)s")
+      out = pool.map_async(runjob, jobs, chunksize=1)
+      todo = len(jobs)
+      while todo:
+         (rkey,res) = queue.get()
+         ret[rkey] = res
+         todo -= 1
+         bar.next()
+      bar.finish()
+      solvedb.update(ret)
    pool.close()
    pool.join()
-   return res
+   return ret
 
 def solved(bid, pids, limit, cores=4, force=False):
    res = eval(bid, pids, limit, cores=cores, force=force)

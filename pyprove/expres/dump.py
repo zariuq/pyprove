@@ -1,7 +1,7 @@
 from . import details, summary
 from .. import log
 
-def processed(bid, pids, results, dkey=None):
+def processed(bid, pids, results, dkey=None, **others):
    data = details.processed(bid, pids, results)
 
    log.text("Legend:")
@@ -20,8 +20,7 @@ def processed(bid, pids, results, dkey=None):
       log.text(out)
    log.text()
 
-def solved(bid, pids, results, ref=None):
-   log.text()
+def solved(bid, pids, results, ref=None, **others):
    log.text("Summary @ %s:" % bid)
    data = summary.make(bid, pids, results, ref=ref) 
    for pid in sorted(data, key=lambda p: data[p][2], reverse=True):
