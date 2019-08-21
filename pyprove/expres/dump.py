@@ -22,6 +22,8 @@ def processed(bid, pids, results, dkey=None, **others):
 
 def solved(bid, pids, results, ref=None, **others):
    log.text("Summary @ %s:" % bid)
+   if not ref:
+      ref = pids[0]
    data = summary.make(bid, pids, results, ref=ref) 
    for pid in sorted(data, key=lambda p: data[p][2], reverse=True):
       s = data[pid]

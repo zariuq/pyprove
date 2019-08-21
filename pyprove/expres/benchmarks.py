@@ -1,5 +1,6 @@
-from multiprocessing import Pool, Manager
 import os
+import traceback
+from multiprocessing import Pool, Manager
 from progress.bar import FillingCirclesBar as Bar
 
 from .. import eprover, log
@@ -7,6 +8,7 @@ from . import protos, results
 from . import solved as solvedb
 
 BENCHMARKS_DIR = os.getenv("ATPY_BENCHMARKS", ".")
+TIMEOUT = 7*24*60*60
 
 def path(bid, problem=""):
    ret = os.path.join(BENCHMARKS_DIR, bid, problem)
@@ -28,8 +30,12 @@ def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
 
 def runjob(job):
    queue = job[7]
-   res = compute(*job[0:7])
-   queue.put((job[0:4],res))
+   try:
+      res = compute(*job[0:7])
+   except:
+      res = {}
+      print("Error: "+traceback.format_exc())
+   queue.put(job[0:4])
    return res
 
 def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **others):
@@ -38,22 +44,25 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    pool = Pool(cores)
    m = Manager()
    queue = m.Queue()
-   ret = {}
+   allres = {}
    for (n,pid) in enumerate(pids,start=1):
       jobs = [(bid,pid,problem,limit,force,ebinary,eargs,queue) for problem in probs]
       bar = Bar("(%s/%s)"%(n,len(pids)), max=len(jobs), suffix="%(percent).1f%% / %(elapsed_td)s / ETA %(eta_td)s")
-      out = pool.map_async(runjob, jobs, chunksize=1)
+      bar.start()
+      run = pool.map_async(runjob, jobs, chunksize=1)
       todo = len(jobs)
       while todo:
-         (rkey,res) = queue.get()
-         ret[rkey] = res
+         queue.get(TIMEOUT)
          todo -= 1
          bar.next()
       bar.finish()
-      solvedb.update(ret)
+      outs = run.get(TIMEOUT)
+      res = {x[0:4]:y for (x,y) in zip(jobs,outs)}
+      solvedb.update(res)
+      allres.update(res)
    pool.close()
    pool.join()
-   return ret
+   return allres
 
 def solved(bid, pids, limit, cores=4, force=False):
    res = eval(bid, pids, limit, cores=cores, force=force)
