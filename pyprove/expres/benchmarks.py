@@ -1,7 +1,8 @@
 import os
 import traceback
 from multiprocessing import Pool, Manager
-from progress.bar import FillingCirclesBar as Bar
+#from progress.bar import FillingCirclesBar as Bar
+from .. import SolvedBar
 
 from .. import eprover, log
 from . import protos, results
@@ -35,7 +36,7 @@ def runjob(job):
    except:
       res = {}
       print("Error: "+traceback.format_exc())
-   queue.put(job[0:4])
+   queue.put(res)
    return res
 
 def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **others):
@@ -47,12 +48,14 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    allres = {}
    for (n,pid) in enumerate(pids,start=1):
       jobs = [(bid,pid,problem,limit,force,ebinary,eargs,queue) for problem in probs]
-      bar = Bar("(%s/%s)"%(n,len(pids)), max=len(jobs), suffix="%(percent).1f%% / %(elapsed_td)s / ETA %(eta_td)s")
+      bar = SolvedBar("(%s/%s)"%(n,len(pids)), max=len(jobs))
       bar.start()
       run = pool.map_async(runjob, jobs, chunksize=1)
       todo = len(jobs)
       while todo:
-         queue.get(TIMEOUT)
+         r = queue.get(TIMEOUT)
+         if eprover.result.solved(r):
+            bar.inc_solved()
          todo -= 1
          bar.next()
       bar.finish()
@@ -63,6 +66,32 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    pool.close()
    pool.join()
    return allres
+
+def cnf(bid, problem, force, queue):
+   try:
+      f_cnf = path(bid, "cnf", problem)
+      if force or not os.path.isfile(f_cnf):
+         open(f_cnf,"wb").write(eprover.runner.cnf(f_problem))
+   except:
+      pass
+   queue.put(problem)
+
+def cnfize(bid, force, **others):
+   probs = problems(bid)
+   pool = Pool(cores)
+   m = Manager()
+   queue = m.Queue()
+   todo = len(probs)
+   def run(p):
+      return cnf(bid, p, force, queue) 
+   pool.map_async(run, probs)
+   while todo:
+      queue.get(TIMEOUT)
+      todo -= 1
+      bar.next()
+   bar.finish()
+   pool.close()
+   pool.join()
 
 def solved(bid, pids, limit, cores=4, force=False):
    res = eval(bid, pids, limit, cores=cores, force=force)
