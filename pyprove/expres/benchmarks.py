@@ -1,8 +1,7 @@
 import os
 import traceback
 from multiprocessing import Pool, Manager
-#from progress.bar import FillingCirclesBar as Bar
-from .. import SolvedBar
+from pyprove.bar  import SolvedBar, ProgressBar
 
 from .. import eprover, log
 from . import protos, results
@@ -76,12 +75,13 @@ def cnf(bid, problem, force, queue):
       pass
    queue.put(problem)
 
-def cnfize(bid, force, **others):
+def cnfize(bid, cores=4, force=False, **others):
    probs = problems(bid)
    pool = Pool(cores)
    m = Manager()
    queue = m.Queue()
    todo = len(probs)
+   bar = ProgressBar("CNF", todo)
    def run(p):
       return cnf(bid, p, force, queue) 
    pool.map_async(run, probs)

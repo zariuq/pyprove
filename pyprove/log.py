@@ -3,8 +3,6 @@ from sys import argv, exc_info
 import sys
 import atexit
 import traceback
-import sys, os, io
-import ctypes
 
 PREFIX = "~~~pyprove~log~~~"
 
@@ -41,33 +39,3 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
 
 def text(msg0=""):
    msg(msg0, timestamp=False)
-
-libc = ctypes.CDLL(None)
-c_stdout = ctypes.c_void_p.in_dll(libc, 'stdout')
-c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
-
-def redirect(std, fd):
-   libc.fflush(c_stdout)
-   libc.fflush(c_stderr)
-   std_fd = std.fileno()
-   std.close()
-   os.dup2(fd, std_fd)
-   return io.TextIOWrapper(os.fdopen(std_fd,"wb"))
-
-def redirect_start(f_log, bar=None):
-   s_log = open(f_log, mode="wb")
-   dup_out = os.dup(sys.stdout.fileno())
-   dup_err = os.dup(sys.stderr.fileno())
-   sys.stdout = redirect(sys.stdout, s_log.fileno())
-   sys.stderr = redirect(sys.stderr, s_log.fileno())
-   if bar:
-      bar.file = io.TextIOWrapper(os.fdopen(dup_err,"wb"))
-   return (s_log, dup_out, dup_err)
-
-def redirect_finish(s_log, dup_out, dup_err):
-   sys.stdout = redirect(sys.stdout, dup_out)
-   sys.stderr = redirect(sys.stderr, dup_err)
-   os.close(dup_out)
-   os.close(dup_err)
-   s_log.close()
-
