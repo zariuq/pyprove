@@ -1,9 +1,6 @@
 import os
-import traceback
-from multiprocessing import Pool, Manager
-from pyprove.bar  import SolvedBar, ProgressBar
 
-from .. import eprover, log
+from .. import eprover, log, bar
 from . import protos, results
 from . import solved as solvedb
 
@@ -28,70 +25,43 @@ def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
       out = eprover.runner.run(f_problem, proto, limit, f_out, ebinary, eargs)
    return results.load(bid, pid, problem, limit)
 
-def runjob(job):
-   queue = job[7]
-   try:
-      res = compute(*job[0:7])
-   except:
-      res = {}
-      print("Error: "+traceback.format_exc())
-   queue.put(res)
-   return res
+def run_compute(job):
+   return bar.run(compute, job)
 
 def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **others):
+   def callback(arg, res, bar):
+      if eprover.result.solved(res):
+         bar.inc_solved()
+
    probs = problems(bid)
    log.msg("+ evaluating %s strategies @ %s (%d problems) @ limit %s @ %s cores" % (len(pids), bid, len(probs), limit, cores))
-   pool = Pool(cores)
-   m = Manager()
-   queue = m.Queue()
+   
    allres = {}
+   fmt = "%%%ds" % max(map(len,pids))
    for (n,pid) in enumerate(pids,start=1):
-      jobs = [(bid,pid,problem,limit,force,ebinary,eargs,queue) for problem in probs]
-      bar = SolvedBar("(%s/%s)"%(n,len(pids)), max=len(jobs))
-      bar.start()
-      run = pool.map_async(runjob, jobs, chunksize=1)
-      todo = len(jobs)
-      while todo:
-         r = queue.get(TIMEOUT)
-         if eprover.result.solved(r):
-            bar.inc_solved()
-         todo -= 1
-         bar.next()
-      bar.finish()
-      outs = run.get(TIMEOUT)
-      res = {x[0:4]:y for (x,y) in zip(jobs,outs)}
+      args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
+      name = pid if len(pid)<30 else "%s..%s"%(pid[:12],pid[-16:])
+      name = "(%d/%d) %30s" % (n,len(pids),name)
+      outs = bar.applies(name, run_compute, args, 
+               cores=cores, bar=bar.SolvedBar, callback=callback)
+      res = {x[0:4]:y for (x,y) in zip(args,outs)}
       solvedb.update(res)
       allres.update(res)
-   pool.close()
-   pool.join()
    return allres
 
-def cnf(bid, problem, force, queue):
-   try:
-      f_cnf = path(bid, "cnf", problem)
-      if force or not os.path.isfile(f_cnf):
-         open(f_cnf,"wb").write(eprover.runner.cnf(f_problem))
-   except:
-      pass
-   queue.put(problem)
+def cnf(bid, problem, force):
+   f_cnf = path(os.path.join(bid, "cnf"), problem)
+   if force or not os.path.isfile(f_cnf):
+      f_problem = path(bid, problem)
+      open(f_cnf,"wb").write(eprover.runner.cnf(f_problem))
+
+def run_cnf(job):
+   return bar.run(cnf, job)
 
 def cnfize(bid, cores=4, force=False, **others):
-   probs = problems(bid)
-   pool = Pool(cores)
-   m = Manager()
-   queue = m.Queue()
-   todo = len(probs)
-   bar = ProgressBar("CNF", todo)
-   def run(p):
-      return cnf(bid, p, force, queue) 
-   pool.map_async(run, probs)
-   while todo:
-      queue.get(TIMEOUT)
-      todo -= 1
-      bar.next()
-   bar.finish()
-   pool.close()
-   pool.join()
+   os.system("mkdir -p %s" % path(bid, "cnf"))
+   args = [(bid,p,force) for p in problems(bid)]
+   bar.applies("Computing CNFs", run_cnf, args, cores=cores)
 
 def solved(bid, pids, limit, cores=4, force=False):
    res = eval(bid, pids, limit, cores=cores, force=force)

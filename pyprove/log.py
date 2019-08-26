@@ -39,3 +39,4 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
 
 def text(msg0=""):
    msg(msg0, timestamp=False)
+
