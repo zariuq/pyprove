@@ -10,14 +10,14 @@ def path(bid, pid, limit):
 def load(bid, pid, limit):
    f_solved = path(bid, pid, limit)
    if os.path.isfile(f_solved):
-      return set(file(path(bid, pid, limit)).read().strip().split("\n"))
+      return set(open(path(bid, pid, limit)).read().strip().split("\n"))
    else:
       return set()
 
 def save(bid, pid, limit, problems):
    f_solved = path(bid, pid, limit)
    os.system("mkdir -p %s" % os.path.dirname(f_solved))
-   file(f_solved, "w").write(("\n".join(sorted(problems)))+"\n")
+   open(f_solved, "w").write(("\n".join(sorted(problems)))+"\n")
 
 def update(results):
    solved = {}

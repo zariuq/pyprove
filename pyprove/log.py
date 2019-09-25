@@ -9,7 +9,7 @@ def terminating(cache):
    msg("Terminating.")
    if "last_traceback" in dir(sys):
       import traceback
-      traceback.print_last(file=file(cache[1],"a"))
+      traceback.print_last(file=open(cache[1],"a"))
 
 
 def start(intro, config=None, script=""):
@@ -28,9 +28,9 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
       cache[0] = now
    
    msg = ("[%s] %s" % (now-cache[0], msg)) if timestamp else msg
-   print msg
+   print(msg)
    if PREFIX:
-      f = file(cache[1],"a")
+      f = open(cache[1],"a")
       f.write(msg+"\n")
       f.flush()
       f.close()

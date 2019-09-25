@@ -34,7 +34,7 @@ def parse(f_out, trains=False, out=None, proof=False):
    if proof:
       result["PROOF"] = []
    if f_out is not None:
-      out = file(f_out)
+      out = open(f_out)
    else:
       out = out.strip().split("\n")
             

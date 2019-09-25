@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pyprove',
-      version='0.1',
+      version='0.2',
       description='Automated Theorem Proving Tools',
       url='http://github.com/ai4reason/pyprove',
       author='ai4reason',
