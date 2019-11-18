@@ -39,6 +39,8 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    allres = {}
    fmt = "%%%ds" % max(map(len,pids))
    for (n,pid) in enumerate(pids,start=1):
+      if "completed" in others and pid in others["completed"]:
+          continue
       args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
       name = pid if len(pid)<30 else "%s..%s"%(pid[:12],pid[-16:])
       name = "(%d/%d) %30s" % (n,len(pids),name)
@@ -47,6 +49,8 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
       res = {x[0:4]:y for (x,y) in zip(args,outs)}
       solvedb.update(res)
       allres.update(res)
+      if "completed" in others:
+          others["completed"][pid] = True
    return allres
 
 def cnf(bid, problem, force):
