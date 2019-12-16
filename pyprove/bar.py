@@ -45,7 +45,7 @@ def applies(msg, fun, args, cores=4, callback=None, bar=ProgressBar):
    todo = len(args)
    bar = bar(msg, max=todo)
    bar.start()
-   runner = pool.map_async(fun, [arg+(queue,) for arg in args])
+   runner = pool.map_async(fun, [arg+(queue,) for arg in args], chunksize=1)
    while todo:
       (arg,res) = queue.get(TIMEOUT)
       if callback:
