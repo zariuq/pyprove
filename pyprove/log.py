@@ -40,3 +40,12 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
 def text(msg0=""):
    msg(msg0, timestamp=False)
 
+def humanbytes(b):
+   units = {0 : 'Bytes', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB', 5: 'PB'}
+   power = 1024
+   n = 0
+   while b > power:
+      b /= power
+      n += 1
+   return "%.2f %s" % (b, units[n])
+
