@@ -40,10 +40,9 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    fmt = "%%%ds" % max(map(len,pids))
    for (n,pid) in enumerate(pids,start=1):
       args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
-      name = pid if len(pid)<30 else "%s..%s"%(pid[:12],pid[-16:])
-      name = "(%d/%d) %30s" % (n,len(pids),name)
+      name = "(%d/%d)" % (n,len(pids))
       outs = bar.applies(name, run_compute, args, 
-               cores=cores, bar=bar.SolvedBar, callback=callback)
+               cores=cores, bar=bar.SolvedBar(name, max=len(args), tail=pid), callback=callback)
       res = {x[0:4]:y for (x,y) in zip(args,outs)}
       solvedb.update(res)
       allres.update(res)
