@@ -14,10 +14,17 @@ def terminating(cache):
 def trace():
    text(traceback.format_exc())
 
+def mapping(m, info=None):
+   if info:
+      msg(info)
+   size = max([len(str(x)) for x in m])
+   pair = "| %%-%ds = %%s" % size
+   text("\n".join([pair % (x,m[x]) for x in sorted(m)]))
+
 def start(intro, config=None, script=""):
-   config = "\n   ".join(["%12s = %s"%(x,config[x]) for x in sorted(config)]) if config else ""
-   intro = "%s\n\n   %s\n" % (intro, config)
    msg(intro, script=script, reset=True)
+   if config:
+      mapping(config)
 
 def msg(msg, cache=[], script="", timestamp=True, reset=False):
    now = datetime.now()
@@ -64,5 +71,12 @@ def humantime(s):
    m = s // 60
    s -= 60*m
    return "%02d:%02d:%04.1f" % (h,m,s)
+
+exps_2 = {2**n:n for n in range(256)}
+
+def humanexp(n):
+   if n in exps_2:
+      return "2e%s" % exps_2[n]
+   return str(n)
 
 
