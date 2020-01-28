@@ -5,11 +5,12 @@ RESULTS_DIR = os.getenv("EXPRES_RESULTS", "./00RESULTS")
 RAMDISK_DIR = None
 
 def path(bid, pid, problem, limit, ext="out"):
-   d_pid = "%s%s/%s" % (limit, "s" if isinstance(limit,int) else "", pid)
+   tid = bid.replace("/","-")
+   tid += "-%s%s" % ("T" if isinstance(limit,int) else "", limit)
    f_out = "%s.%s" % (problem, ext)
-   f = os.path.join(RESULTS_DIR, bid, d_pid, f_out)
+   f = os.path.join(RESULTS_DIR, tid, pid, f_out)
    if RAMDISK_DIR and not os.path.isfile(f):
-      f = os.path.join(RAMDISK_DIR, bid, d_pid, f_out)
+      f = os.path.join(RAMDISK_DIR, tid, pid, f_out)
    return f
 
 def output(bid, pid, problem, limit):

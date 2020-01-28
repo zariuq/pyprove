@@ -20,6 +20,6 @@ def make(bid, pids, results, selector=None, key=None, none="-"):
          #            float(details[(problem,limit)][pid]))
    return details
 
-def processed(bid, pids, results):
-   return make(bid, pids, results, key="PROCESSED")
+def processed(bid, pids, results, none="-"):
+   return make(bid, pids, results, key="PROCESSED", none=none)
 
