@@ -1,10 +1,11 @@
 from datetime import datetime
 from sys import argv, exc_info
+import os
 import sys
 import atexit
 import traceback
 
-PREFIX = "~~~pyprove~log~~~"
+REPORTS_DIR = os.getenv("EXPRES_REPORTS", "./00REPORTS")
 
 def terminating(cache):
    msg("Terminating.")
@@ -31,14 +32,15 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
    if not cache:
       script = argv[0] if argv and not script else script
       cache.append(now)
-      cache.append(("%s%s~~~%s" % (PREFIX, script.lstrip("./").replace("/","+"), now)).replace(" ","~"))
+      os.system("mkdir -p %s" % REPORTS_DIR)
+      cache.append(("%s/%s__%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"), now.strftime("%y-%m-%d__%H:%M:%S"))).replace(" ","_"))
       atexit.register(terminating, cache)
    elif reset:
       cache[0] = now
    
    msg = ("[%s] %s" % (now-cache[0], msg)) if timestamp else msg
    print(msg)
-   if PREFIX:
+   if REPORTS_DIR:
       f = open(cache[1],"a")
       f.write(msg+"\n")
       f.flush()
