@@ -33,3 +33,11 @@ def solved(bid, pids, results, ref=None, **others):
          log.text("%s %4s/%4s: %s" % ("!" if s[1] else "",s[2],s[0],pid))
    log.text()
 
+def grid(xs, ys, key):
+   log.text("X = [ %s ]" % " ".join(map(str,xs)))
+   log.text("Y = [ %s ]" % " ".join(map(str,ys)))
+   log.text("Z = [")
+   for y in ys:
+      log.text("    %s" % " ".join([str(key(x,y)) for x in xs]))
+   log.text("]")
+
