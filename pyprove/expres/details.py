@@ -23,3 +23,9 @@ def make(bid, pids, results, selector=None, key=None, none="-"):
 def processed(bid, pids, results, none="-"):
    return make(bid, pids, results, key="PROCESSED", none=none)
 
+def runtime(bid, pids, results, none="-"):
+   return make(bid, pids, results, key="RUNTIME", none=none)
+
+def generated(bid, pids, results, none="-"):
+   return make(bid, pids, results, key="GENERATED", none=none)
+

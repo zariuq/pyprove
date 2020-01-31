@@ -2,10 +2,10 @@ from . import details, summary
 from .. import log
 
 def processed(bid, pids, results, dkey=None, **others):
-   data = details.processed(bid, pids, results)
+   data = details.processed(bid, pids, results, none=-1)
 
    log.text("Legend:")
-   out = "%25s" % "problem:"
+   out = "      %25s    " % "problem:"
    for (i,pid) in enumerate(pids):
       out += "%10s" % ("%02d:" % i)
       log.text("%02d: %s" % (i,pid))
@@ -13,11 +13,53 @@ def processed(bid, pids, results, dkey=None, **others):
    
    log.text("Processed:")
    log.text(out)
+   log.text("X = [")
    for d in sorted(data, key=dkey):
-      out = "%25s" % d[0]
+      out = "   /* %25s */ " % d[0]
       for pid in pids:
          out += "%10s" % data[d][pid]
       log.text(out)
+   log.text("]")
+   log.text()
+
+def runtime(bid, pids, results, dkey=None, **others):
+   data = details.runtime(bid, pids, results, none=-1)
+   
+   out = "      %25s    " % "problem:"
+   for (i,pid) in enumerate(pids):
+      out += "%10s" % ("%02d:" % i)
+      log.text("%02d: %s" % (i,pid))
+   log.text()
+
+   log.text("Runtime:")
+   log.text(out)
+   log.text("X = [")
+   for d in sorted(data, key=dkey):
+      out = "   /* %25s */ " % d[0]
+      for pid in pids:
+         out += "%10s" % data[d][pid]
+      log.text(out)
+   log.text("]")
+   log.text()
+
+def generated(bid, pids, results, dkey=None, **others):
+   data = details.generated(bid, pids, results, none=-1)
+   
+   out = "      %25s    " % "problem:"
+   for (i,pid) in enumerate(pids):
+      out += "%10s" % ("%02d:" % i)
+      log.text("%02d: %s" % (i,pid))
+   log.text()
+
+   log.text("Generated:")
+   log.text(out)
+   log.text("X = [")
+   for d in sorted(data, key=dkey):
+      out = "   /* %25s */ " % d[0]
+      for pid in pids:
+         out += "%10s" % data[d][pid]
+      log.text(out)
+   log.text("]")
    log.text()
 
 def solved(bid, pids, results, ref=None, **others):
