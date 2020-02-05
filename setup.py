@@ -7,8 +7,10 @@ setup(name='pyprove',
       author='ai4reason',
       license='GPL3',
       packages=find_packages(),
-      #scripts=[
+      # scripts=[
       #   'bin/greedy-cover.py'
-      #],
+      # ],
+      install_requires=[
+          'progress',
+      ],
       zip_safe=False)
-
