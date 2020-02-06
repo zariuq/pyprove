@@ -69,7 +69,7 @@ def solved(bid, pids, results, ref=None, **others):
    data = summary.make(bid, pids, results, ref=ref) 
    for pid in sorted(data, key=lambda p: data[p][2], reverse=True):
       s = data[pid]
-      if ref:
+      if ref and len(s) >=5:
          log.text("%s %4s/%4s   +%2s/-%2s: %s" % ("!" if s[1] else "",s[2],s[0],s[3],s[4],pid))
       else:
          log.text("%s %4s/%4s: %s" % ("!" if s[1] else "",s[2],s[0],pid))
