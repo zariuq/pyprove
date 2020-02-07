@@ -21,7 +21,7 @@ elif platform == "win32":
 def redirect(std, fd):
     libc.fflush(c_stdout)
     libc.fflush(c_stderr)
-    std_fd = std.fisleno()
+    std_fd = std.fileno()
     std.close()
     os.dup2(fd, std_fd)
     return io.TextIOWrapper(os.fdopen(std_fd, "wb"))
