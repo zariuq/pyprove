@@ -13,7 +13,7 @@ def processed(bid, pids, results, dkey=None, **others):
    
    log.text("Processed:")
    log.text(out)
-   log.text("X = [")
+   log.text("P = [")
    for d in sorted(data, key=dkey):
       out = "   /* %25s */ " % d[0]
       for pid in pids:
@@ -33,7 +33,7 @@ def runtime(bid, pids, results, dkey=None, **others):
 
    log.text("Runtime:")
    log.text(out)
-   log.text("X = [")
+   log.text("T = [")
    for d in sorted(data, key=dkey):
       out = "   /* %25s */ " % d[0]
       for pid in pids:
@@ -53,7 +53,7 @@ def generated(bid, pids, results, dkey=None, **others):
 
    log.text("Generated:")
    log.text(out)
-   log.text("X = [")
+   log.text("G = [")
    for d in sorted(data, key=dkey):
       out = "   /* %25s */ " % d[0]
       for pid in pids:

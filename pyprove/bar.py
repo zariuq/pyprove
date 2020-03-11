@@ -45,17 +45,15 @@ def applies(msg, fun, args, cores=4, callback=None, bar=None):
    m = Manager()
    queue = m.Queue()
    todo = len(args)
-   if not bar:
-      bar = ProgressBar(msg, max=todo)
-   bar.start()
+   if bar: bar.start()
    runner = pool.map_async(fun, [arg+(queue,) for arg in args], chunksize=1)
    while todo:
       (arg,res) = queue.get(TIMEOUT)
       if callback:
          callback(arg, res, bar)
       todo -= 1
-      bar.next()
-   bar.finish()
+      if bar: bar.next()
+   if bar: bar.finish()
    pool.close()
    pool.join()
    return runner.get(TIMEOUT)

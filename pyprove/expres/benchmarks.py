@@ -41,8 +41,13 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
    for (n,pid) in enumerate(pids,start=1):
       args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
       name = "(%d/%d)" % (n,len(pids))
+      if log.ENABLED:
+         progbar = bar.SolvedBar(name, max=len(args), tail=pid) 
+      else:
+         progbar = None
+         callback = None
       outs = bar.applies(name, run_compute, args, 
-               cores=cores, bar=bar.SolvedBar(name, max=len(args), tail=pid), callback=callback)
+               cores=cores, bar=progbar, callback=callback)
       res = {x[0:4]:y for (x,y) in zip(args,outs)}
       solvedb.update(res)
       allres.update(res)

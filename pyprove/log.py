@@ -6,6 +6,15 @@ import atexit
 import traceback
 
 REPORTS_DIR = os.getenv("EXPRES_REPORTS", "./00REPORTS")
+ENABLED = True
+
+def disable():
+   global ENABLED
+   ENABLED = False
+
+def enable():
+   global ENABLED
+   ENABLED = True
 
 def terminating(cache):
    msg("Terminating.")
@@ -18,9 +27,10 @@ def trace():
 def mapping(m, info=None):
    if info:
       msg(info)
-   size = max([len(str(x)) for x in m])
-   pair = "| %%-%ds = %%s" % size
-   text("\n".join([pair % (x,m[x]) for x in sorted(m)]))
+   if m:
+      size = max([len(str(x)) for x in m])
+      pair = "| %%-%ds = %%s" % size
+      text("\n".join([pair % (x,m[x]) for x in sorted(m)]))
 
 def start(intro, config=None, script=""):
    msg(intro, script=script, reset=True)
@@ -28,6 +38,8 @@ def start(intro, config=None, script=""):
       mapping(config)
 
 def msg(msg, cache=[], script="", timestamp=True, reset=False):
+   if not ENABLED:
+      return
    now = datetime.now()
    if not cache:
       script = argv[0] if argv and not script else script
