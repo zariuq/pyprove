@@ -2,7 +2,7 @@ from multiprocessing import Pool, Manager
 
 TIMEOUT = 7*24*60*60
 
-def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None):
+def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None, chunksize=1):
    pool = Pool(cores)
    m = Manager()
    queue = m.Queue()
@@ -14,7 +14,7 @@ def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None):
 
    store = callback is None
    args = [(fun,job,queue,store) for job in args]
-   runner = pool.starmap_async(run, args, chunksize=1)
+   runner = pool.starmap_async(run, args, chunksize=chunksize)
    while todo:
       (arg,res) = queue.get(TIMEOUT)
       if callback:
