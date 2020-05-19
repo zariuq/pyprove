@@ -12,7 +12,8 @@ def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None):
       bar = ProgressBar(barmsg, max=todo)
    if bar: bar.start()
 
-   args = [(fun,job,queue) for job in args]
+   store = callback is None
+   args = [(fun,job,queue,store) for job in args]
    runner = pool.starmap_async(run, args, chunksize=1)
    while todo:
       (arg,res) = queue.get(TIMEOUT)
@@ -23,10 +24,9 @@ def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None):
    if bar: bar.finish()
    pool.close()
    pool.join()
-   ret = runner.get(TIMEOUT)
-   return ret if not callback else None
+   return None if callback else runner.get(TIMEOUT)
 
-def run(fun, job, queue):
+def run(fun, job, queue, store):
    try:
       res = fun(*job)
    except Exception as e:
@@ -35,5 +35,5 @@ def run(fun, job, queue):
       print("Error: "+traceback.format_exc())
       res = None
    queue.put((job, res))
-   return res
+   return (job, res) if store else None
 
