@@ -1,14 +1,20 @@
 import os
 from .. import eprover
 
-RESULTS_DIR = os.getenv("EXPRES_RESULTS", "./00RESULTS")
+DEFAULT_NAME = "00RESULTS"
+DEFAULT_DIR = os.getenv("PYPROVE_RESULTS", DEFAULT_NAME)
 RAMDISK_DIR = None
 
+def dir(bid, pid, limit):
+   d_out = bid.replace("/","-") + "-" + limit
+   return os.path.join(DEFAULT_DIR, d_out)  
+
 def path(bid, pid, problem, limit, ext="out"):
+   global DEFAULT_DIR, RAMDISK_DIR
    tid = bid.replace("/","-")
    tid += "-%s%s" % ("T" if isinstance(limit,int) else "", limit)
    f_out = "%s.%s" % (problem, ext)
-   f = os.path.join(RESULTS_DIR, tid, pid, f_out)
+   f = os.path.join(DEFAULT_DIR, tid, pid, f_out)
    if RAMDISK_DIR and not os.path.isfile(f):
       f = os.path.join(RAMDISK_DIR, tid, pid, f_out)
    return f

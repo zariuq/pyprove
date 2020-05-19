@@ -49,7 +49,7 @@ def cmd(f_problem, proto, limit, ebinary=None, eargs=None):
    return "%s %s %s %s %s %s" % (PERF,timeout,ebinary,estatic,proto,f_problem)
 
 def run(f_problem, proto, limit, f_out=None, ebinary=None, eargs=None):
-   cmd0 = cmd(f_problem, proto, limit, ebinary, eargs)
+   cmd0 = cmd(f_problem, proto, limit, ebinary=ebinary, eargs=eargs)
    env0 = dict(os.environ)
    env0["OMP_NUM_THREADS"] = "1"
    env0["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -58,7 +58,10 @@ def run(f_problem, proto, limit, f_out=None, ebinary=None, eargs=None):
       with open(f_out,"w") as out:
          return subprocess.call(cmd0, shell=True, stdout=out, stderr=STDOUT, env=env0)
    else:
-      return subprocess.check_output(cmd0, shell=True, stderr=STDOUT, env=env0)
+      try:
+         return subprocess.check_output(cmd0, shell=True, stderr=STDOUT, env=env0).decode()
+      except subprocess.CalledProcessError as e:
+         return e.output.decode()
 
 def cnf(f_problem):
    cmd0 = "%s --tstp-format --free-numbers --cnf %s" % (E_BIN,f_problem)
