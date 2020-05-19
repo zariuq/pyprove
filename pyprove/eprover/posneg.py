@@ -3,7 +3,7 @@ from .. import par
 
 def ispos(line):
    return line.startswith("cnf(") and \
-         ("#trainpos" in line) and \
+         ("#trainpos" in line or "# trainpos" in line) and \
          ("$false" not in line)
 
 def isneg(line):
