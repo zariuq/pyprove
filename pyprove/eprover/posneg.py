@@ -38,8 +38,8 @@ def makeone(f_out):
    lines = open(f_out).read().strip().split("\n")
    save(lines, f_out)
 
-def make(d_outs, cores=4, msg="[POS/NEG]"):
+def make(d_outs, cores=4, msg="[POS/NEG]", chunksize=100):
    files = [path.join(d_out,f) for d_out in d_outs for f in listdir(d_out)]
    files = [(f,) for f in files if isout(f)]
-   par.apply(makeone, files, cores=cores, barmsg=msg)
+   par.apply(makeone, files, cores=cores, barmsg=msg, chunksize=chunksize)
 
