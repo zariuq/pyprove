@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
-import os, re
+import os, re, hashlib
 
-MIZAR = os.path.join(os.getenv("HOME","."), "atp/bin/mizar40.axiom.names")
+SHORTCUTS = os.path.join(os.getenv("HOME","."), "atp/bin/mizar40.axiom.names")
 
 def mizar():
-   miz = open(MIZAR).read().strip().split("\n")
+   miz = open(SHORTCUTS).read().strip().split("\n")
    miz = dict([x.split(" ") for x in miz if x])
    return miz
 
-def make(f_out, axioms=None, d_lmgs=None):
+def make(f_out):
    lems = {}
    elders = {}
    roles = {}
-   for line in open(f_out):
+
+   f = open(f_out)
+   for line in f:
       if not (line.startswith("fof(") or line.startswith("cnf(")):
          continue
       if "trainpos" in line or "trainneg" in line:
@@ -53,16 +55,14 @@ def make(f_out, axioms=None, d_lmgs=None):
       if re.search(r"esk[0-9]+_[0-9]+", clause) or ("epred" in clause):
          continue
 
-      lem = "-".join(sorted([axioms[x] for x in elders[name]]))
+      lem = tuple(sorted([x for x in elders[name]]))
 
       if lem not in lems:
          lems[lem] = set()
       lems[lem].add(clause)
+   f.close()
 
-   if d_lmgs:
-      append(lems, d_lmgs=d_lmgs)
-
-   return lems if not d_lmgs else None
+   return lems
 
 def join(*ls):
    lems = {}
@@ -77,18 +77,29 @@ def join(*ls):
 def append(lems, d_lmgs="lemmings"):
    os.system("mkdir -p %s" % d_lmgs)
    for l in lems:
-      with open(os.path.join(d_lmgs,l),"a") as f: f.write("\n".join(lems[l]))
+      sha1 = hashlib.sha1("+".join(l).encode()).hexdigest()
+      f_lem = os.path.join(d_lmgs, "of%04d-%s" % (len(l), sha1))
+      with open(f_lem+".lemmas", "a") as f: f.write("\n".join(lems[l])+"\n")
+      # save names to check for possible collisions
+      if os.path.isfile(f_lem+".name"):
+         with open(f_lem+".names", "r") as f: names = set(f.read().strip().split("\n"))
+      else:
+         names = set()
+      names.add("+".join(l))
+      with open(f_lem+".names", "w") as f: f.write("\n".join(names)+"\n")
 
 
-def save(lems, prf="lmg_", d_lmgs="lemmings", counter=[0]):
+def save(lems, prefix="lmg_0_", d_lmgs="lemmings", counter=[0]):
    def fresh():
       counter[0] += 1
-      return "%s%s" % (prf, counter[0])
+      return "%s%s" % (prefix, counter[0])
 
    os.system("mkdir -p %s" % d_lmgs)
    for l in lems:
+      sha1 = hashlib.sha1("+".join(l).encode()).hexdigest()
+      f_lem = os.path.join(d_lmgs, "of%04d-%s.p" % (len(l), sha1))
       ls = ["cnf(%s, axiom, %s)."%(fresh(),c) for c in lems[l]]
-      with open(os.path.join(d_lmgs,l),"w") as f: f.write("\n".join(ls))
+      with open(os.path.join(d_lmgs,f_lem),"w") as f: f.write("\n".join(ls)+"\n")
 
 
 #miz = mizar()

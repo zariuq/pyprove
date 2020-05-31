@@ -16,9 +16,9 @@ def apply(fun, args, cores=4, callback=None, bar=None, barmsg=None, chunksize=1)
    args = [(fun,job,queue,store) for job in args]
    runner = pool.starmap_async(run, args, chunksize=chunksize)
    while todo:
-      (arg,res) = queue.get(TIMEOUT)
+      res = queue.get(TIMEOUT)
       if callback:
-         callback(arg, res, bar)
+         callback(res, bar)
       todo -= 1
       if bar: bar.next()
    if bar: bar.finish()
@@ -34,6 +34,6 @@ def run(fun, job, queue, store):
       import traceback
       print("Error: "+traceback.format_exc())
       res = None
-   queue.put((job, res))
-   return (job, res) if store else None
+   queue.put(res)
+   return res if store else None
 
