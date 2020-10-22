@@ -83,7 +83,7 @@ def logger(name=None, console_only=False, **others):
       logger0.addHandler(h)
 
    h = logging.StreamHandler()
-   h.setLevel(logging.INFO)
+   h.setLevel(logging.DEBUG)
    h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
    logger0.addHandler(h)
 
