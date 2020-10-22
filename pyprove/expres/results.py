@@ -5,9 +5,9 @@ DEFAULT_NAME = "00RESULTS"
 DEFAULT_DIR = os.getenv("PYPROVE_RESULTS", DEFAULT_NAME)
 RAMDISK_DIR = None
 
-def dir(bid, pid, limit):
+def dir(bid, pid, limit, **others):
    d_out = bid.replace("/","-") + "-" + limit
-   return os.path.join(DEFAULT_DIR, d_out)  
+   return os.path.join(DEFAULT_DIR, d_out, pid)  
 
 def path(bid, pid, problem, limit, ext="out"):
    global DEFAULT_DIR, RAMDISK_DIR

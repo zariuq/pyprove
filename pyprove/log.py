@@ -4,6 +4,7 @@ import os
 import sys
 import atexit
 import traceback
+import logging
 
 REPORTS_DIR = os.getenv("EXPRES_REPORTS", "./00REPORTS")
 ENABLED = True
@@ -60,6 +61,42 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
 
 def text(msg0=""):
    msg(msg0, timestamp=False)
+
+
+
+
+
+
+
+
+def init(name=None, console_only=False):
+
+   logger = logging.getLogger()
+   logger.setLevel(logging.INFO)
+   
+   if not console_only:
+      os.system("mkdir -p %s" % REPORTS_DIR)
+      script = argv[0] if argv and not name else name
+      now = datetime.now()
+      f_log = "%s/%s__%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"), now.strftime("%y-%m-%d__%H:%M:%S"))
+      h = logging.FileHandler(f_log)
+      h.setLevel(logging.INFO)
+      h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
+      logger.addHandler(h)
+
+   h = logging.StreamHandler()
+   h.setLevel(logging.INFO)
+   logger.addHandler(h)
+
+
+
+
+
+
+
+
+
+
 
 def humanbytes(b):
    units = {0 : 'Bytes', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB', 5: 'PB'}

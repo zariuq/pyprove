@@ -44,3 +44,4 @@ def finish(s_log, dup_out, dup_err):
     os.close(dup_out)
     os.close(dup_err)
     s_log.close()
+
