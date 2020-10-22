@@ -17,11 +17,6 @@ def enable():
    global ENABLED
    ENABLED = True
 
-def terminating(cache):
-   msg("Terminating.")
-   if "last_traceback" in dir(sys):
-      traceback.print_last(file=open(cache[1],"a"))
-
 def trace():
    text(traceback.format_exc())
 
@@ -67,9 +62,13 @@ def text(msg0=""):
 
 
 
+def terminating():
+   logger = logging.getLogger()
+   logger.info("Enigmatic Terminating.")
+   if "last_traceback" in dir(sys):
+      traceback.print_last()
 
-
-def init(name=None, console_only=False):
+def logger(name=None, console_only=False, **others):
 
    logger = logging.getLogger()
    logger.setLevel(logging.INFO)
@@ -78,7 +77,7 @@ def init(name=None, console_only=False):
       os.system("mkdir -p %s" % REPORTS_DIR)
       script = argv[0] if argv and not name else name
       now = datetime.now()
-      f_log = "%s/%s__%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"), now.strftime("%y-%m-%d__%H:%M:%S"))
+      f_log = "%s/%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"))
       h = logging.FileHandler(f_log)
       h.setLevel(logging.INFO)
       h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
@@ -86,7 +85,15 @@ def init(name=None, console_only=False):
 
    h = logging.StreamHandler()
    h.setLevel(logging.INFO)
+   h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
    logger.addHandler(h)
+   
+   atexit.register(terminating)
+
+   logger.info("Enigmatic Running.")
+
+   if name:
+      return logging.getLogger(name)
 
 
 
