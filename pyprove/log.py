@@ -64,14 +64,13 @@ def text(msg0=""):
 
 def terminating():
    logger = logging.getLogger()
-   logger.info("Enigmatic Terminating.")
+   logger.info("Enigmatic Terminating.\n")
    if "last_traceback" in dir(sys):
       traceback.print_last()
 
 def logger(name=None, console_only=False, **others):
-
-   logger = logging.getLogger()
-   logger.setLevel(logging.INFO)
+   logger0 = logging.getLogger()
+   logger0.setLevel(logging.INFO)
    
    if not console_only:
       os.system("mkdir -p %s" % REPORTS_DIR)
@@ -81,19 +80,16 @@ def logger(name=None, console_only=False, **others):
       h = logging.FileHandler(f_log)
       h.setLevel(logging.INFO)
       h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
-      logger.addHandler(h)
+      logger0.addHandler(h)
 
    h = logging.StreamHandler()
    h.setLevel(logging.INFO)
    h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
-   logger.addHandler(h)
-   
+   logger0.addHandler(h)
+
+   logger0.info("Enigmatic Running.")
    atexit.register(terminating)
-
-   logger.info("Enigmatic Running.")
-
-   if name:
-      return logging.getLogger(name)
+   return logging.getLogger(name) if name else logger0
 
 
 
