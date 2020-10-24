@@ -1,7 +1,6 @@
 from datetime import datetime
 from sys import argv, exc_info
-import os
-import sys
+import os, io, sys
 import atexit
 import traceback
 import logging
@@ -82,7 +81,7 @@ def logger(name=None, console_only=False, **others):
       h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
       logger0.addHandler(h)
 
-   h = logging.StreamHandler()
+   h = logging.StreamHandler(io.TextIOWrapper(os.fdopen(sys.stdin.fileno(),"wb")))
    h.setLevel(logging.DEBUG)
    h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
    logger0.addHandler(h)
