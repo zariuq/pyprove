@@ -4,6 +4,7 @@ import os, io, sys
 import atexit
 import traceback
 import logging
+from . import human
 
 REPORTS_DIR = os.getenv("EXPRES_REPORTS", "./00REPORTS")
 ENABLED = True
@@ -69,7 +70,7 @@ def terminating():
 
 def logger(name=None, console_only=False, **others):
    logger0 = logging.getLogger()
-   logger0.setLevel(logging.INFO)
+   logger0.setLevel(logging.DEBUG)
    
    if not console_only:
       os.system("mkdir -p %s" % REPORTS_DIR)
@@ -77,7 +78,7 @@ def logger(name=None, console_only=False, **others):
       now = datetime.now()
       f_log = "%s/%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"))
       h = logging.FileHandler(f_log)
-      h.setLevel(logging.INFO)
+      h.setLevel(logging.DEBUG)
       h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
       logger0.addHandler(h)
 
@@ -90,46 +91,25 @@ def logger(name=None, console_only=False, **others):
    atexit.register(terminating)
    return logging.getLogger(name) if name else logger0
 
+def data(msg=None, m={}): 
+   size = max([len(str(x)) for x in m])
+   pair = "| %%-%ds = %%s" % size
+   prefix = (msg + "\n") if msg else "" 
+   tab = ("\n".join([pair % (x,human.format(x,m[x])) for x in sorted(m)]))
+   return prefix + tab
 
-
-
-
-
-
-
-
-
-
-def humanbytes(b):
-   units = {0 : 'Bytes', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB', 5: 'PB'}
-   power = 1024
-   n = 0
-   while b > power:
-      b /= power
-      n += 1
-   return "%.2f %s" % (b, units[n])
-
-def humanint(n):
-   s = str(int(abs(n)))
-   r = s[-3:]
-   s = s[:-3]
-   while s:
-      r = s[-3:] + "," + r
-      s = s[:-3]
-   return r if n >= 0 else "-%s" % r
-
-def humantime(s):
-   h = s // 3600
-   s -= 3600*h
-   m = s // 60
-   s -= 60*m
-   return "%02d:%02d:%04.1f" % (h,m,s)
-
-exps_2 = {2**n:n for n in range(256)}
-
-def humanexp(n):
-   if n in exps_2:
-      return "2e%s" % exps_2[n]
-   return str(n)
+def table(msg=None, t=[]):
+   def size(i):
+      return max([len(str(row[i])) for row in t])
+   def conv(x):
+      return "%.2f" % x if type(x) is float else x
+   t = [list(map(conv, row)) for row in t]
+   sizes = [size(i) for i in range(len(t[0]))]
+   fmts = ["%%-%ds" % s for s in sizes]
+   fmt = " | ".join(fmts)
+   fmt = "| " + fmt + " |"
+   tab = "\n".join([fmt % tuple(row) for row in t])
+   prefix = (msg + "\n") if msg else ""
+   return prefix + tab
 
 
