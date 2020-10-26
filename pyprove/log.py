@@ -60,7 +60,7 @@ def text(msg0=""):
 
 
 
-
+BAR = True
 
 def terminating():
    logger = logging.getLogger()
