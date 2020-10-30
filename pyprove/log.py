@@ -42,7 +42,7 @@ def msg(msg, cache=[], script="", timestamp=True, reset=False):
       cache.append(now)
       os.system("mkdir -p %s" % REPORTS_DIR)
       cache.append(("%s/%s__%s.log" % (REPORTS_DIR, script.lstrip("./").replace("/","+"), now.strftime("%y-%m-%d__%H:%M:%S"))).replace(" ","_"))
-      atexit.register(terminating, cache)
+      #atexit.register(terminating, cache)
    elif reset:
       cache[0] = now
    
@@ -111,5 +111,10 @@ def table(msg=None, t=[]):
    tab = "\n".join([fmt % tuple(row) for row in t])
    prefix = (msg + "\n") if msg else ""
    return prefix + tab
+
+def lst(msg=None, l=[]):
+   prefix = (msg + "\n") if msg else ""
+   ls = "\n".join(map(str,l)) 
+   return prefix + ls
 
 

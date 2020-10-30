@@ -15,6 +15,6 @@ def load(pid):
 
 def save(pid, proto):
    f_pid = path(pid)
-   os.system("mkdir -p %s" % os.path.dirname(f_pid))
+   os.system('mkdir -p "%s"' % os.path.dirname(f_pid))
    open(f_pid,"w").write(proto.strip())
 
