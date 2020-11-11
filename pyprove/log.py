@@ -60,8 +60,6 @@ def text(msg0=""):
 
 
 
-BAR = True
-
 def terminating():
    logger = logging.getLogger()
    logger.info("Enigmatic Terminating.\n")
@@ -82,7 +80,7 @@ def logger(name=None, console_only=False, **others):
       h.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s'))
       logger0.addHandler(h)
 
-   h = logging.StreamHandler(io.TextIOWrapper(os.fdopen(sys.stdin.fileno(),"wb")))
+   h = logging.StreamHandler(io.TextIOWrapper(os.fdopen(sys.stdout.fileno(),"wb")))
    h.setLevel(logging.DEBUG)
    h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
    logger0.addHandler(h)

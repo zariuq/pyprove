@@ -32,7 +32,7 @@ def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, debug=False, ebinary=None, eargs=None, **others):
+def eval(bid, pids, limit, cores=4, debug=False, ebinary=None, eargs=None, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()
@@ -48,9 +48,10 @@ def eval(bid, pids, limit, cores=4, debug=False, ebinary=None, eargs=None, **oth
    for (n,pid) in enumerate(pids,start=1):
       args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
       name = "(%d/%d)" % (n,len(pids))
-      if log.BAR:
+      if "headless" not in options:
          progbar = bar.SolvedBar(name, max=len(args), tail=pid) 
       else:
+         logger.info("- evaluating %s" % pid)
          progbar = None
          callback = None
       outs = bar.applies(name, run_compute, args, 

@@ -9,11 +9,6 @@ class ProgressBar(FillingSquaresBar):
       FillingSquaresBar.__init__(self, message, max=max)
       self.suffix = "%(percent)5.1f%% | %(elapsed_td)s | ETA %(eta_td)s"
 
-   @property
-   def eta(self):
-      return int(ceil((self.elapsed/self.progress)-self.elapsed)) if self.progress else 0
-
-
 class SolvedBar(FillingCirclesBar):
    
    def __init__(self, message, max, tail=None):
