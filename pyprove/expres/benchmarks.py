@@ -1,11 +1,14 @@
 import os
 
-from .. import eprover, log, bar
+from .. import eprover, log, bar, human
 from . import protos, results
 from . import solved as solvedb
+import logging
 
 BENCHMARKS_DIR = os.getenv("ATPY_BENCHMARKS", ".")
 TIMEOUT = 7*24*60*60
+
+logger = logging.getLogger(__name__)
 
 def path(bid, problem=""):
    ret = os.path.join(BENCHMARKS_DIR, bid, problem)
@@ -19,22 +22,26 @@ def problems(bid):
 def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
    f_problem = path(bid, problem)
    f_out = results.path(bid, pid, problem, limit)
-   if force or not os.path.isfile(f_out):
-      os.system("mkdir -p %s" % os.path.dirname(f_out))
+   if force or not os.path.isfile(f_out) or (os.path.getsize(f_out)==0):
+      os.system('mkdir -p "%s"' % os.path.dirname(f_out))
       proto = protos.load(pid)
-      out = eprover.runner.run(f_problem, proto, limit, f_out, ebinary, eargs)
+      out = eprover.runner.run(f_problem, proto, limit, ebinary=ebinary, eargs=eargs)
+      eprover.posneg.save(out.strip().split("\n"), f_out)
    return results.load(bid, pid, problem, limit)
 
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **others):
+def eval(bid, pids, limit, cores=4, debug=False, ebinary=None, eargs=None, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()
 
+   force = "force" in debug
    probs = problems(bid)
-   log.msg("+ evaluating %s strategies @ %s (%d problems) @ limit %s @ %s cores" % (len(pids), bid, len(probs), limit, cores))
+
+   logger.info("+ evaluating %s strategies on %d problems" % (len(pids), len(probs)))
+   logger.debug(log.data("- evaluation parameters:", dict(bid=bid, limit=limit, pids=pids, problems=human.humanint(len(probs)*len(pids)),eta=human.humantime(len(probs)*len(pids)*int(limit.lstrip("T"))/cores))))
    
    allres = {}
    fmt = "%%%ds" % max(map(len,pids))
@@ -42,10 +49,15 @@ def eval(bid, pids, limit, cores=4, force=False, ebinary=None, eargs=None, **oth
       if "completed" in others and pid in others["completed"]:
           continue
       args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
-      name = pid if len(pid)<30 else "%s..%s"%(pid[:12],pid[-16:])
-      name = "(%d/%d) %30s" % (n,len(pids),name)
+      name = "(%d/%d)" % (n,len(pids))
+      if "headless" not in options:
+         progbar = bar.SolvedBar(name, max=len(args), tail=pid) 
+      else:
+         logger.info("- evaluating %s" % pid)
+         progbar = None
+         callback = None
       outs = bar.applies(name, run_compute, args, 
-               cores=cores, bar=bar.SolvedBar, callback=callback)
+               cores=cores, bar=progbar, callback=callback)
       res = {x[0:4]:y for (x,y) in zip(args,outs)}
       solvedb.update(res)
       allres.update(res)
@@ -63,7 +75,7 @@ def run_cnf(job):
    return bar.run(cnf, job)
 
 def cnfize(bid, cores=4, force=False, **others):
-   os.system("mkdir -p %s" % path(bid, "cnf"))
+   os.system('mkdir -p "%s"' % path(bid, "cnf"))
    args = [(bid,p,force) for p in problems(bid)]
    bar.applies("Computing CNFs", run_cnf, args, cores=cores)
 

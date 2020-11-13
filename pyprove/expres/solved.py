@@ -4,8 +4,9 @@ from .. import eprover
 SOLVED_DIR = os.getenv("EXPRES_SOLVED", "./00SOLVED")
 
 def path(bid, pid, limit):
-   f_pid = "%s%s/%s" % (limit, "s" if isinstance(limit,int) else "", pid)
-   return os.path.join(SOLVED_DIR, bid, f_pid)
+   tid = bid.replace("/","-")
+   tid += "-%s%s" % ("T" if isinstance(limit,int) else "", limit)
+   return os.path.join(SOLVED_DIR, tid, pid)
 
 def load(bid, pid, limit):
    f_solved = path(bid, pid, limit)

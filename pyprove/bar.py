@@ -9,17 +9,14 @@ class ProgressBar(FillingSquaresBar):
       FillingSquaresBar.__init__(self, message, max=max)
       self.suffix = "%(percent)5.1f%% | %(elapsed_td)s | ETA %(eta_td)s"
 
-   @property
-   def eta(self):
-      return int(ceil((self.elapsed/self.progress)-self.elapsed)) if self.progress else 0
-
-
 class SolvedBar(FillingCirclesBar):
    
-   def __init__(self, message, max):
+   def __init__(self, message, max, tail=None):
       FillingCirclesBar.__init__(self, message, max=max)
       self._solved = 0
-      self.suffix = "%(percent)5.1f%% | +%(solved)4s @ %(elapsed_td)s | EST +%(eta_solved)4s @ %(eta_td)s"
+      self.suffix = "%(percent)5.1f%% | +%(solved)5s @ %(elapsed_td)s | EST +%(eta_solved)5s @ %(eta_td)s"
+      if tail:
+         self.suffix += " | %s " % tail
 
    def inc_solved(self):
       self._solved += 1
@@ -38,21 +35,20 @@ class SolvedBar(FillingCirclesBar):
 
 TIMEOUT = 7*24*60*60
 
-def applies(msg, fun, args, cores=4, callback=None, bar=ProgressBar):
+def applies(msg, fun, args, cores=4, callback=None, bar=None):
    pool = Pool(cores)
    m = Manager()
    queue = m.Queue()
    todo = len(args)
-   bar = bar(msg, max=todo)
-   bar.start()
-   runner = pool.map_async(fun, [arg+(queue,) for arg in args])
+   if bar: bar.start()
+   runner = pool.map_async(fun, [arg+(queue,) for arg in args], chunksize=1)
    while todo:
       (arg,res) = queue.get(TIMEOUT)
       if callback:
          callback(arg, res, bar)
       todo -= 1
-      bar.next()
-   bar.finish()
+      if bar: bar.next()
+   if bar: bar.finish()
    pool.close()
    pool.join()
    return runner.get(TIMEOUT)

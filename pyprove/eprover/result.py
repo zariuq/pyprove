@@ -1,6 +1,6 @@
 import re
 
-STATUS_OK = ['Satisfiable', 'Unsatisfiable', 'Theorem', 'CounterSatisfiable']
+STATUS_OK = ['Satisfiable', 'Unsatisfiable', 'Theorem', 'CounterSatisfiable', 'ContradictoryAxioms']
 STATUS_OUT = ['ResourceOut', 'GaveUp']
 STATUS_ALL = STATUS_OK + STATUS_OUT
 
