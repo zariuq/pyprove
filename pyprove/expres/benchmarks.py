@@ -32,7 +32,7 @@ def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, debug=False, ebinary=None, eargs=None, options=[], **others):
+def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()
