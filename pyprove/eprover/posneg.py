@@ -72,10 +72,10 @@ def save(lines, f_out):
                if parent_key in parents:
                    label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
                parents[parent_key] = label
-   print("\n%s" % f_out)
-   print("given clauses: %s" % len(posneg))
-   print("generated clauses: %s" % len(clauses))
-   print("clauses with two parents: %s" % len(parents))
+   #print("\n%s" % f_out)
+   #print("given clauses: %s" % len(posneg))
+   #print("generated clauses: %s" % len(clauses))
+   #print("clauses with two parents: %s" % len(parents))
    ppos = []
    pneg = []
    for (parent1, parent2), label in parents.items():
