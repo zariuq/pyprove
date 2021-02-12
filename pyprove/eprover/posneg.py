@@ -29,25 +29,27 @@ def isout(filename):
    return filename.endswith(".out") and path.isfile(filename)
    
 def split(lines):
-   pos = filter(ispos, lines)
-   neg = filter(isneg, lines)
-   other = filter(isother, lines)
+   pos = list(filter(ispos, lines))
+   neg = list(filter(isneg, lines))
+   other = list(filter(isother, lines))
    return (pos, neg, other)
 
 def save(lines, f_out):
    def filename(ext):
       return "%s.%s" % (f_out[:-4] if f_out.endswith(".out") else f_out, ext)
+
    dirname, f_name = os.path.split(os.path.splitext(f_out)[0])
    dirname = os.path.join(dirname, "parents")
    def filename_parents(ext):
       return os.path.join(dirname, "%s.%s" % (f_name, ext))
+
    if not path.isfile(f_out):
       # d_dst mode: enforce *.out extension
       f_out = filename("out")
    os.system('mkdir -p "%s"' % dirname) # I don't see a more efficient way to do this at the moment
+
    (pos, neg, other) = split(lines)
-   (pos, neg, other) = (list(pos), list(neg), list(other))
-   given_clauses = {}
+   #(pos, neg, other) = (list(pos), list(neg), list(other))
    posneg = set()
    clauses = {}
    parents = {}
@@ -78,17 +80,22 @@ def save(lines, f_out):
    #print("clauses with two parents: %s" % len(parents))
    ppos = []
    pneg = []
+   #i = 0
    for (parent1, parent2), label in parents.items():
-       #print("{}> {} {}".format("+1" if label else "-0", parent1, parent2))
-       parent1_clause = clauses[parent1]
-       parent2_clause = clauses[parent2]
+       #i = i + 1
+       #print("{}> {} {}   (# {})".format("+1" if label else "-0", parent1, parent2, i))
+       try:
+           parent1_clause = clauses[parent1]
+           parent2_clause = clauses[parent2]
+       except:
+           continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
        if label:
            ppos.append(parent1_clause)
            ppos.append(parent2_clause + ";")
        else:
            pneg.append(parent1_clause)
            pneg.append(parent2_clause + ";")
-              
+
    open(f_out,"w").write("\n".join(other)+"\n")
    if pos:
       open(filename("pos"),"w").write("\n".join(pos)+"\n")
