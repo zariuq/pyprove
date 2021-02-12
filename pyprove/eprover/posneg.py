@@ -3,6 +3,7 @@ import re
 from os import path, listdir
 from .. import par
 from _ast import Try
+from random import random
 
 PATS = {
    "NAME":      re.compile(r"^cnf\((\w+),"),                        # Retrieves clause name
@@ -53,31 +54,34 @@ def save(lines, f_out):
    posneg = set()
    clauses = {}
    parents = {}
+   responsible_parents = set()
    for line in pos + neg:
        clause_name = PATS["NAME"].search(line)
        if clause_name:
            posneg.add(clause_name.group(1))
-   for line in other:
-       clause = PATS["DERIV"].search(line)
-       if clause:
-           clause_formula = "{}).".format(clause.group(1))
-           clause_name = clause.group(2)
-           clauses[clause_name] = clause_formula
-           
-           clause_parents = PATS["PARENTS"].search(line)
-           if clause_parents:
-               parent1 = clause_parents.group(1)
-               parent2 = clause_parents.group(2)
-               is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
-               label = clause_name in posneg or is_empty_clause
-               parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
-               if parent_key in parents:
-                   label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
-               parents[parent_key] = label
-   #print("\n%s" % f_out)
-   #print("given clauses: %s" % len(posneg))
-   #print("generated clauses: %s" % len(clauses))
-   #print("clauses with two parents: %s" % len(parents))
+   if posneg:
+       for line in other:
+           clause = PATS["DERIV"].search(line)
+           if clause:
+               clause_formula = "{}).".format(clause.group(1))
+               clause_name = clause.group(2)
+               clauses[clause_name] = clause_formula
+               
+               clause_parents = PATS["PARENTS"].search(line)
+               if clause_parents:
+                   parent1 = clause_parents.group(1)
+                   parent2 = clause_parents.group(2)
+                   is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
+                   label = clause_name in posneg or is_empty_clause
+                   parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
+                   if parent_key in parents:
+                       label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
+                   # The idea is to only accept negative examples if a parent is a responsible parent of a good caluse
+                   if label or random() < 0.01:
+                       responsible_parents.add(parent1)
+                       responsible_parents.add(parent2)
+                   
+                   parents[parent_key] = label
    ppos = []
    pneg = []
    #i = 0
@@ -92,10 +96,18 @@ def save(lines, f_out):
        if label:
            ppos.append(parent1_clause)
            ppos.append(parent2_clause + ";")
-       else:
+       elif parent1 in responsible_parents or parent2 in responsible_parents:
            pneg.append(parent1_clause)
            pneg.append(parent2_clause + ";")
-
+           
+   #print("\n%s" % f_out)
+   #print("given clauses: %s" % len(posneg))
+   #print("generated clauses: %s" % len(clauses))
+   #print("clauses with two parents: %s" % len(parents))
+   #print("responsible parents: %s" % len(responsible_parents))
+   #print("positive clauses: %s" % len(ppos))
+   #print("negative clauses: %s" % len(pneg))
+ 
    open(f_out,"w").write("\n".join(other)+"\n")
    if pos:
       open(filename("pos"),"w").write("\n".join(pos)+"\n")
