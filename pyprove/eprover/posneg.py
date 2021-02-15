@@ -60,6 +60,7 @@ def save(lines, f_out):
        if clause_name:
            posneg.add(clause_name.group(1))
    if posneg:
+       ratio = len(pos) / len(neg) if neg else 0
        for line in other:
            clause = PATS["DERIV"].search(line)
            if clause:
@@ -76,8 +77,9 @@ def save(lines, f_out):
                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
                    if parent_key in parents:
                        label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
-                   # The idea is to only accept negative examples if a parent is a responsible parent of a good caluse
-                   if label or random() < 0.01:
+                   # The idea is to only accept negative examples if a parent is a responsible parent of a good clause
+                   # Moreover, the ratio is calculated to roughly balance pos and neg examples
+                   if label or random() < ratio:
                        responsible_parents.add(parent1)
                        responsible_parents.add(parent2)
                    
