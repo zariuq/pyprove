@@ -19,20 +19,20 @@ def problems(bid):
    probs = [x for x in probs if os.path.isfile(path(bid, x)) and not x.endswith(".cnf")]
    return probs
 
-def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None):
+def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None, ratio=1):
    f_problem = path(bid, problem)
    f_out = results.path(bid, pid, problem, limit)
    if force or not os.path.isfile(f_out) or (os.path.getsize(f_out)==0):
       os.system('mkdir -p "%s"' % os.path.dirname(f_out))
       proto = protos.load(pid)
       out = eprover.runner.run(f_problem, proto, limit, ebinary=ebinary, eargs=eargs)
-      eprover.posneg.save(out.strip().split("\n"), f_out)
+      eprover.posneg.save(out.strip().split("\n"), f_out, ratio)
    return results.load(bid, pid, problem, limit)
 
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, options=[], **others):
+def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, ratio=1, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()
@@ -48,7 +48,7 @@ def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, options=
    for (n,pid) in enumerate(pids,start=1):
       if "completed" in others and pid in others["completed"]:
           continue
-      args = [(bid,pid,problem,limit,force,ebinary,eargs) for problem in probs]
+      args = [(bid,pid,problem,limit,force,ebinary,eargs,ratio) for problem in probs]
       name = "(%d/%d)" % (n,len(pids))
       if "headless" not in options:
          progbar = bar.SolvedBar(name, max=len(args), tail=pid) 

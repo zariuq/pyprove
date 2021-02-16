@@ -35,7 +35,7 @@ def split(lines):
    other = list(filter(isother, lines))
    return (pos, neg, other)
 
-def save(lines, f_out):
+def save(lines, f_out, ratio=1):
    def filename(ext):
       return "%s.%s" % (f_out[:-4] if f_out.endswith(".out") else f_out, ext)
 
@@ -51,7 +51,7 @@ def save(lines, f_out):
 
    (pos, neg, other) = split(lines)
    #(pos, neg, other) = (list(pos), list(neg), list(other))
-   ratio = len(pos) / len(neg) if neg else 0
+   ratio_dec = ratio * (len(pos) / len(neg)) if neg else 0
    posneg = set()
    clauses = {}
    parents = {}
@@ -61,7 +61,6 @@ def save(lines, f_out):
        if clause_name:
            posneg.add(clause_name.group(1))
    if posneg:
-       ratio = len(pos) / len(neg) if neg else 0
        for line in other:
            clause = PATS["DERIV"].search(line)
            if clause:
@@ -99,7 +98,7 @@ def save(lines, f_out):
        if label:
            ppos.append(parent1_clause)
            ppos.append(parent2_clause + ";")
-       elif random() < ratio: #parent1 in responsible_parents or parent2 in responsible_parents:
+       elif random() < ratio_dec: #parent1 in responsible_parents or parent2 in responsible_parents:
            pneg.append(parent1_clause)
            pneg.append(parent2_clause + ";")
            
