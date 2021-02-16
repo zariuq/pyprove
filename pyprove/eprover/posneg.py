@@ -51,6 +51,7 @@ def save(lines, f_out):
 
    (pos, neg, other) = split(lines)
    #(pos, neg, other) = (list(pos), list(neg), list(other))
+   ratio = len(pos) / len(neg) if neg else 0
    posneg = set()
    clauses = {}
    parents = {}
@@ -79,9 +80,9 @@ def save(lines, f_out):
                        label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
                    # The idea is to only accept negative examples if a parent is a responsible parent of a good clause
                    # Moreover, the ratio is calculated to roughly balance pos and neg examples
-                   if label or random() < ratio:
-                       responsible_parents.add(parent1)
-                       responsible_parents.add(parent2)
+                   #if label or random() < ratio:
+                   #    responsible_parents.add(parent1)
+                   #    responsible_parents.add(parent2)
                    
                    parents[parent_key] = label
    ppos = []
@@ -98,7 +99,7 @@ def save(lines, f_out):
        if label:
            ppos.append(parent1_clause)
            ppos.append(parent2_clause + ";")
-       elif parent1 in responsible_parents or parent2 in responsible_parents:
+       elif random() < ratio: #parent1 in responsible_parents or parent2 in responsible_parents:
            pneg.append(parent1_clause)
            pneg.append(parent2_clause + ";")
            
