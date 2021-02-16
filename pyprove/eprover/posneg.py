@@ -55,7 +55,7 @@ def save(lines, f_out, ratio=1):
    posneg = set()
    clauses = {}
    parents = {}
-   responsible_parents = set()
+   #responsible_parents = set()
    for line in pos + neg:
        clause_name = PATS["NAME"].search(line)
        if clause_name:

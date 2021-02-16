@@ -16,7 +16,10 @@ class SolvedBar(FillingCirclesBar):
       self._solved = 0
       self.suffix = "%(percent)5.1f%% | +%(solved)5s @ %(elapsed_td)s | EST +%(eta_solved)5s @ %(eta_td)s"
       if tail:
-         self.suffix += " | %s " % tail
+          if len(tail) > 60:
+                  self.suffix += " | %s ... %s " % (tail[:30], tail[-30:])
+          else:
+              self.suffix += " | %s " % tail
 
    def inc_solved(self):
       self._solved += 1
