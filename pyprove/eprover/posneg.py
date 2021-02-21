@@ -3,7 +3,7 @@ import re
 from os import path, listdir
 from .. import par
 from _ast import Try
-from random import random
+from random import shuffle
 
 PATS = {
    "NAME":      re.compile(r"^cnf\((\w+),"),                        # Retrieves clause name
@@ -51,16 +51,23 @@ def save(lines, f_out, ratio=1):
 
    (pos, neg, other) = split(lines)
    #(pos, neg, other) = (list(pos), list(neg), list(other))
-   ratio_dec = ratio * (len(pos) / len(neg)) if neg else 0
-   posneg = set()
+
+   pos_set = set()
+   neg_set = set()
    clauses = {}
    parents = {}
+   ppos = []
+   pneg = []
    #responsible_parents = set()
-   for line in pos + neg:
+   for line in pos: # + neg:
        clause_name = PATS["NAME"].search(line)
        if clause_name:
-           posneg.add(clause_name.group(1))
-   if posneg:
+           pos_set.add(clause_name.group(1))
+   for line in neg:
+       clause_name = PATS["NAME"].search(line)
+       if clause_name:
+           neg_set.add(clause_name.group(1))
+   if pos_set and neg_set:
        for line in other:
            clause = PATS["DERIV"].search(line)
            if clause:
@@ -73,7 +80,7 @@ def save(lines, f_out, ratio=1):
                    parent1 = clause_parents.group(1)
                    parent2 = clause_parents.group(2)
                    is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
-                   label = clause_name in posneg or is_empty_clause
+                   label = clause_name in pos_set or is_empty_clause # Formerly posneg
                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
                    if parent_key in parents:
                        label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
@@ -84,24 +91,30 @@ def save(lines, f_out, ratio=1):
                    #    responsible_parents.add(parent2)
                    
                    parents[parent_key] = label
-   ppos = []
-   pneg = []
-   #i = 0
-   for (parent1, parent2), label in parents.items():
-       #i = i + 1
-       #print("{}> {} {}   (# {})".format("+1" if label else "-0", parent1, parent2, i))
-       try:
-           parent1_clause = clauses[parent1]
-           parent2_clause = clauses[parent2]
-       except:
-           continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
-       if label:
-           ppos.append(parent1_clause)
-           ppos.append(parent2_clause + ";")
-       elif random() < ratio_dec: #parent1 in responsible_parents or parent2 in responsible_parents:
-           pneg.append(parent1_clause)
-           pneg.append(parent2_clause + ";")
+                   
+       #i = 0
+       for (parent1, parent2), label in parents.items():
+           #i = i + 1
+           #print("{}> {} {}   (# {})".format("+1" if label else "-0", parent1, parent2, i))
+           try:
+               parent1_clause = clauses[parent1]
+               parent2_clause = clauses[parent2]
+           except:
+               continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
+           if label:
+               ppos.append(parent1_clause)
+               ppos.append(parent2_clause + ";")
+           else: #parent1 in responsible_parents or parent2 in responsible_parents:
+               pneg.append(parent1_clause)
+               pneg.append(parent2_clause + ";")
+               
+       if ratio > 0:
+           shuffle(pneg) 
+           cut_off = int(ratio * len(ppos))
+           pneg = pneg[:cut_off]
            
+            
+               
    #print("\n%s" % f_out)
    #print("given clauses: %s" % len(posneg))
    #print("generated clauses: %s" % len(clauses))
