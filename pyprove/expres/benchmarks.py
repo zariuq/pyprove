@@ -19,7 +19,7 @@ def problems(bid):
    probs = [x for x in probs if os.path.isfile(path(bid, x)) and not x.endswith(".cnf")]
    return probs
 
-def compute(bid, pid, opid, problem, limit, force=False, ebinary=None, eargs=None, ratio=1):
+def compute(bid, opid, problem, limit, pid, force=False, ebinary=None, eargs=None, ratio=1):
    f_problem = path(bid, problem)
    f_out = results.path(bid, opid, problem, limit)
    if force or not os.path.isfile(f_out) or (os.path.getsize(f_out)==0):
@@ -49,7 +49,7 @@ def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, output_n
       opid = pid + output_nick
       if "completed" in others and opid in others["completed"]:
           continue
-      args = [(bid,pid,opid,problem,limit,force,ebinary,eargs,ratio) for problem in probs]
+      args = [(bid,opid,problem,limit,pid,force,ebinary,eargs,ratio) for problem in probs]
       name = "(%d/%d)" % (n,len(pids))
       if "headless" not in options:
          progbar = bar.SolvedBar(name, max=len(args), tail=opid) 
