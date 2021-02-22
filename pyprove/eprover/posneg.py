@@ -54,6 +54,7 @@ def save(lines, f_out, ratio=1):
 
    pos_set = set()
    neg_set = set()
+   posneg = set()
    clauses = {}
    parents = {}
    ppos = []
@@ -67,7 +68,8 @@ def save(lines, f_out, ratio=1):
        clause_name = PATS["NAME"].search(line)
        if clause_name:
            neg_set.add(clause_name.group(1))
-   if pos_set and neg_set:
+   posneg = pos_set | neg_set
+   if posneg: #pos_set and neg_set:
        for line in other:
            clause = PATS["DERIV"].search(line)
            if clause:
@@ -80,7 +82,7 @@ def save(lines, f_out, ratio=1):
                    parent1 = clause_parents.group(1)
                    parent2 = clause_parents.group(2)
                    is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
-                   label = clause_name in pos_set or is_empty_clause # Formerly posneg
+                   label = clause_name in posneg or is_empty_clause # Formerly posneg
                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
                    if parent_key in parents:
                        label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
