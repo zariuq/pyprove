@@ -19,20 +19,20 @@ def problems(bid):
    probs = [x for x in probs if os.path.isfile(path(bid, x)) and not x.endswith(".cnf")]
    return probs
 
-def compute(bid, pid, problem, limit, force=False, ebinary=None, eargs=None, ratio=1):
+def compute(bid, pid, opid, problem, limit, force=False, ebinary=None, eargs=None, ratio=1):
    f_problem = path(bid, problem)
-   f_out = results.path(bid, pid, problem, limit)
+   f_out = results.path(bid, opid, problem, limit)
    if force or not os.path.isfile(f_out) or (os.path.getsize(f_out)==0):
       os.system('mkdir -p "%s"' % os.path.dirname(f_out))
       proto = protos.load(pid)
       out = eprover.runner.run(f_problem, proto, limit, ebinary=ebinary, eargs=eargs)
       eprover.posneg.save(out.strip().split("\n"), f_out, ratio)
-   return results.load(bid, pid, problem, limit)
+   return results.load(bid, opid, problem, limit)
 
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, ratio=1, options=[], **others):
+def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, output_nick="", ratio=1, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()
@@ -46,14 +46,15 @@ def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, ratio=1,
    allres = {}
    fmt = "%%%ds" % max(map(len,pids))
    for (n,pid) in enumerate(pids,start=1):
-      if "completed" in others and pid in others["completed"]:
+      opid = pid + output_nick
+      if "completed" in others and opid in others["completed"]:
           continue
-      args = [(bid,pid,problem,limit,force,ebinary,eargs,ratio) for problem in probs]
+      args = [(bid,pid,opid,problem,limit,force,ebinary,eargs,ratio) for problem in probs]
       name = "(%d/%d)" % (n,len(pids))
       if "headless" not in options:
-         progbar = bar.SolvedBar(name, max=len(args), tail=pid) 
+         progbar = bar.SolvedBar(name, max=len(args), tail=opid) 
       else:
-         logger.info("- evaluating %s" % pid)
+         logger.info("- evaluating %s" % opid)
          progbar = None
          callback = None
       outs = bar.applies(name, run_compute, args, 
@@ -62,7 +63,7 @@ def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, ratio=1,
       solvedb.update(res)
       allres.update(res)
       if "completed" in others:
-          others["completed"][pid] = True
+          others["completed"][opid] = True
    return allres
 
 def cnf(bid, problem, force):
