@@ -53,7 +53,7 @@ def save(lines, f_out, ratio=1):
    #(pos, neg, other) = (list(pos), list(neg), list(other))
 
    pos_set = set()
-   neg_set = set()
+   #neg_set = set()
    posneg = set()
    clauses = {}
    parents = {}
@@ -64,11 +64,11 @@ def save(lines, f_out, ratio=1):
        clause_name = PATS["NAME"].search(line)
        if clause_name:
            pos_set.add(clause_name.group(1))
-   for line in neg:
-       clause_name = PATS["NAME"].search(line)
-       if clause_name:
-           neg_set.add(clause_name.group(1))
-   posneg = pos_set | neg_set
+   #for line in neg:
+   #    clause_name = PATS["NAME"].search(line)
+   #    if clause_name:
+   #        neg_set.add(clause_name.group(1))
+   posneg = pos_set # | neg_set
    if posneg: #pos_set and neg_set:
        for line in other:
            clause = PATS["DERIV"].search(line)
@@ -104,11 +104,9 @@ def save(lines, f_out, ratio=1):
            except:
                continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
            if label:
-               ppos.append(parent1_clause)
-               ppos.append(parent2_clause + ";")
+               ppos.append("%s\n%s;" % (parent1_clause, parent2_clause))
            else: #parent1 in responsible_parents or parent2 in responsible_parents:
-               pneg.append(parent1_clause)
-               pneg.append(parent2_clause + ";")
+               pneg.append("%s\n%s;" % (parent1_clause, parent2_clause))
                
        if ratio > 0:
            shuffle(pneg) 
