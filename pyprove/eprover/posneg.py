@@ -47,29 +47,27 @@ def save(lines, f_out, ratio=1):
    if not path.isfile(f_out):
       # d_dst mode: enforce *.out extension
       f_out = filename("out")
-   os.system('mkdir -p "%s"' % dirname) # I don't see a more efficient way to do this at the moment
+   os.system('mkdir -p "%s"' % dirname)
 
    (pos, neg, other) = split(lines)
-   #(pos, neg, other) = (list(pos), list(neg), list(other))
 
    pos_set = set()
-   #neg_set = set()
+   neg_set = set()
    posneg = set()
    clauses = {}
    parents = {}
    ppos = []
    pneg = []
-   #responsible_parents = set()
    for line in pos: # + neg:
        clause_name = PATS["NAME"].search(line)
        if clause_name:
            pos_set.add(clause_name.group(1))
-   #for line in neg:
-   #    clause_name = PATS["NAME"].search(line)
-   #    if clause_name:
-   #        neg_set.add(clause_name.group(1))
-   posneg = pos_set # | neg_set
-   if posneg: #pos_set and neg_set:
+   for line in neg:
+       clause_name = PATS["NAME"].search(line)
+       if clause_name:
+           neg_set.add(clause_name.group(1))
+   posneg = pos_set | neg_set
+   if posneg:
        for line in other:
            clause = PATS["DERIV"].search(line)
            if clause:
@@ -83,45 +81,29 @@ def save(lines, f_out, ratio=1):
                    parent2 = clause_parents.group(2)
                    is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
                    label = clause_name in posneg or is_empty_clause # Formerly posneg
+                   
+                   # The following only works because the clauses are merged, which is believed to be commutative. 
                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
                    if parent_key in parents:
-                       label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
-                   # The idea is to only accept negative examples if a parent is a responsible parent of a good clause
-                   # Moreover, the ratio is calculated to roughly balance pos and neg examples
-                   #if label or random() < ratio:
-                   #    responsible_parents.add(parent1)
-                   #    responsible_parents.add(parent2)
+                       label = label or parents[parent_key]
                    
                    parents[parent_key] = label
                    
-       #i = 0
        for (parent1, parent2), label in parents.items():
-           #i = i + 1
-           #print("{}> {} {}   (# {})".format("+1" if label else "-0", parent1, parent2, i))
            try:
                parent1_clause = clauses[parent1]
                parent2_clause = clauses[parent2]
            except:
-               continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
+               continue #
            if label:
                ppos.append("%s\n%s;" % (parent1_clause, parent2_clause))
-           else: #parent1 in responsible_parents or parent2 in responsible_parents:
+           else:
                pneg.append("%s\n%s;" % (parent1_clause, parent2_clause))
                
        if ratio > 0:
            shuffle(pneg) 
            cut_off = int(ratio * len(ppos))
-           pneg = pneg[:cut_off]
-           
-            
-               
-   #print("\n%s" % f_out)
-   #print("given clauses: %s" % len(posneg))
-   #print("generated clauses: %s" % len(clauses))
-   #print("clauses with two parents: %s" % len(parents))
-   #print("responsible parents: %s" % len(responsible_parents))
-   #print("positive clauses: %s" % len(ppos))
-   #print("negative clauses: %s" % len(pneg))
+           pneg = pneg[:cut_off] 
  
    open(f_out,"w").write("\n".join(other)+"\n")
    if pos:
