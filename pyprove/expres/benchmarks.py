@@ -19,7 +19,7 @@ def problems(bid):
    probs = [x for x in probs if os.path.isfile(path(bid, x)) and not x.endswith(".cnf")]
    return probs
 
-def compute(bid, opid, problem, limit, pid, force=False, ebinary=None, eargs=None, ratio=1):
+def compute(bid, opid, problem, limit, pid, force=False, ebinary=None, eargs=None, ratio=-1):
    f_problem = path(bid, problem)
    f_out = results.path(bid, opid, problem, limit)
    if force or not os.path.isfile(f_out) or (os.path.getsize(f_out)==0):
@@ -32,7 +32,7 @@ def compute(bid, opid, problem, limit, pid, force=False, ebinary=None, eargs=Non
 def run_compute(job):
    return bar.run(compute, job)
 
-def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, output_nick="", ratio=1, options=[], **others):
+def eval(bid, pids, limit, cores=4, debug=[], ebinary=None, eargs=None, output_nick="", ratio=-1, options=[], **others):
    def callback(arg, res, bar):
       if eprover.result.solved(res):
          bar.inc_solved()

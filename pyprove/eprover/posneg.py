@@ -35,93 +35,81 @@ def split(lines):
    other = list(filter(isother, lines))
    return (pos, neg, other)
 
-def save(lines, f_out, ratio=1):
+def extract_parents(pos, neg, other, ratio=0, posneg=False):
+    ppos = []
+    pneg = []
+    pos_set = set()
+    clauses = {}
+    parents = {}
+    for line in pos: # + neg:
+        clause_name = PATS["NAME"].search(line)
+        if clause_name:
+            pos_set.add(clause_name.group(1))
+    if posneg:
+        neg_set = set()
+        for line in neg:
+            clause_name = PATS["NAME"].search(line)
+            if clause_name:
+                neg_set.add(clause_name.group(1))
+        pos_set = pos_set | neg_set
+    if pos_set:
+        for line in other:
+            clause = PATS["DERIV"].search(line)
+            if clause:
+                clause_formula = "{}).".format(clause.group(1))
+                clause_name = clause.group(2)
+                clauses[clause_name] = clause_formula
+                
+                clause_parents = PATS["PARENTS"].search(line)
+                if clause_parents:
+                    parent1 = clause_parents.group(1)
+                    parent2 = clause_parents.group(2)
+                    is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
+                    label = clause_name in pos_set or is_empty_clause # Formerly posneg
+                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
+                    if parent_key in parents:
+                        label = label or parents[parent_key] 
+                    
+                    parents[parent_key] = label
+                    
+        for (parent1, parent2), label in parents.items():
+            try:
+                parent1_clause = clauses[parent1]
+                parent2_clause = clauses[parent2]
+            except:
+                continue
+            if label:
+                ppos.append("%s\n%s;" % (parent1_clause, parent2_clause))
+            else:
+                pneg.append("%s\n%s;" % (parent1_clause, parent2_clause))
+                
+        if ratio > 0:
+            shuffle(pneg) 
+            cut_off = int(ratio * len(ppos))
+            pneg = pneg[:cut_off]
+
+    return ppos, pneg
+
+def save(lines, f_out, ratio=-1, posneg=False):
    def filename(ext):
       return "%s.%s" % (f_out[:-4] if f_out.endswith(".out") else f_out, ext)
 
-   dirname, f_name = os.path.split(os.path.splitext(f_out)[0])
-   dirname = os.path.join(dirname, "parents")
+   dirname, f_name = path.split(path.splitext(f_out)[0])
+   dirname = path.join(dirname, "parents")
    def filename_parents(ext):
-      return os.path.join(dirname, "%s.%s" % (f_name, ext))
+      return path.join(dirname, "%s.%s" % (f_name, ext))
 
    if not path.isfile(f_out):
       # d_dst mode: enforce *.out extension
       f_out = filename("out")
-   os.system('mkdir -p "%s"' % dirname) # I don't see a more efficient way to do this at the moment
 
    (pos, neg, other) = split(lines)
-   #(pos, neg, other) = (list(pos), list(neg), list(other))
-
-   pos_set = set()
-   #neg_set = set()
-   posneg = set()
-   clauses = {}
-   parents = {}
+   
    ppos = []
    pneg = []
-   #responsible_parents = set()
-   for line in pos: # + neg:
-       clause_name = PATS["NAME"].search(line)
-       if clause_name:
-           pos_set.add(clause_name.group(1))
-   #for line in neg:
-   #    clause_name = PATS["NAME"].search(line)
-   #    if clause_name:
-   #        neg_set.add(clause_name.group(1))
-   posneg = pos_set # | neg_set
-   if posneg: #pos_set and neg_set:
-       for line in other:
-           clause = PATS["DERIV"].search(line)
-           if clause:
-               clause_formula = "{}).".format(clause.group(1))
-               clause_name = clause.group(2)
-               clauses[clause_name] = clause_formula
-               
-               clause_parents = PATS["PARENTS"].search(line)
-               if clause_parents:
-                   parent1 = clause_parents.group(1)
-                   parent2 = clause_parents.group(2)
-                   is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
-                   label = clause_name in posneg or is_empty_clause # Formerly posneg
-                   parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
-                   if parent_key in parents:
-                       label = label or parents[parent_key] # Currently precedence is given to positive data, unweighted
-                   # The idea is to only accept negative examples if a parent is a responsible parent of a good clause
-                   # Moreover, the ratio is calculated to roughly balance pos and neg examples
-                   #if label or random() < ratio:
-                   #    responsible_parents.add(parent1)
-                   #    responsible_parents.add(parent2)
-                   
-                   parents[parent_key] = label
-                   
-       #i = 0
-       for (parent1, parent2), label in parents.items():
-           #i = i + 1
-           #print("{}> {} {}   (# {})".format("+1" if label else "-0", parent1, parent2, i))
-           try:
-               parent1_clause = clauses[parent1]
-               parent2_clause = clauses[parent2]
-           except:
-               continue # If the clauses aren't of the prescribed form, i.e., definition introductions rather than inferences, skip it!
-           if label:
-               ppos.append("%s\n%s;" % (parent1_clause, parent2_clause))
-           else: #parent1 in responsible_parents or parent2 in responsible_parents:
-               pneg.append("%s\n%s;" % (parent1_clause, parent2_clause))
-               
-       if ratio > 0:
-           shuffle(pneg) 
-           cut_off = int(ratio * len(ppos))
-           pneg = pneg[:cut_off]
-           
-            
-               
-   #print("\n%s" % f_out)
-   #print("given clauses: %s" % len(posneg))
-   #print("generated clauses: %s" % len(clauses))
-   #print("clauses with two parents: %s" % len(parents))
-   #print("responsible parents: %s" % len(responsible_parents))
-   #print("positive clauses: %s" % len(ppos))
-   #print("negative clauses: %s" % len(pneg))
+   if ratio >= 0:
+       os.system('mkdir -p "%s"' % dirname)
+       ppos, pneg = extract_parents(pos, neg, other, ratio, posneg)
  
    open(f_out,"w").write("\n".join(other)+"\n")
    if pos:
@@ -147,4 +135,32 @@ def make(d_outs, cores=4, msg="[POS/NEG]", chunksize=100, d_dst=None):
    if not outs:
       outs = [(f,d_dst) for f in files if path.isfile(f)]
    par.apply(makeone, outs, cores=cores, barmsg=msg, chunksize=chunksize)
+   
+def makeone_parents(f_out, f_pos, f_neg, f_ppos, f_pneg, ratio=-1, posneg=False, d_dst=None):
+    pos = open(f_pos).read().strip().split("\n")
+    neg = open(f_neg).read().strip().split("\n")
+    other = open(f_out).read().strip().split("\n")
+    ppos, pneg = extract_parents(pos, neg, other, ratio, posneg)
+    if ppos:
+       open(f_ppos,"w").write("\n".join(ppos)+"\n")
+    if pneg:
+       open(f_pneg,"w").write("\n".join(pneg)+"\n")
+ 
+def make_parents(d_outs, ratio=-1, posneg=False, cores=4, msg="[PPOS/PNEG]", chunksize=100, d_dst=None):
+    outs = list()
+    for d_out in d_outs:
+        d_parent = path.join(d_out, "parents")
+        os.system('mkdir -p "%s"' % d_parent)
+        for f in listdir(d_out):
+            f_out = path.join(d_out, f)
+            if isout(f_out):
+                fname = path.splitext(f)[0]
+                f_pos = path.join(d_out, "{}.pos".format(fname))
+                f_neg = path.join(d_out, "{}.neg".format(fname))
+                if path.isfile(f_pos) and path.isfile(f_neg):
+                    f_ppos = path.join(d_parent, "{}.pos".format(fname))
+                    f_pneg = path.join(d_parent, "{}.neg".format(fname))
+                    outs.append((f_out, f_pos, f_neg, f_ppos, f_pneg, ratio, posneg, d_dst))
+    par.apply(makeone_parents, outs, cores=cores, barmsg=msg, chunksize=chunksize)
+    
 
