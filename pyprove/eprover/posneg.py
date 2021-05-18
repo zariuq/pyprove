@@ -35,7 +35,7 @@ def split(lines):
    other = list(filter(isother, lines))
    return (pos, neg, other)
 
-def extract_parents(pos, neg, other, ratio=0, posneg=False):
+def extract_parents(pos, neg, other, ratio=0, posneg=False, ordered=False):
     ppos = []
     pneg = []
     pos_set = set()
@@ -66,7 +66,9 @@ def extract_parents(pos, neg, other, ratio=0, posneg=False):
                     parent2 = clause_parents.group(2)
                     is_empty_clause = True if PATS["FALSE"].search(clause_formula) else False
                     label = clause_name in pos_set or is_empty_clause # Formerly posneg
-                    parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
+                    if ordered:
+                        parent_key = (parent1, parent2) if parent1 < parent2 else (parent2, parent1)
+                    else: parent_key = (parent1, parent2)
                     if parent_key in parents:
                         label = label or parents[parent_key] 
                     
@@ -90,7 +92,7 @@ def extract_parents(pos, neg, other, ratio=0, posneg=False):
 
     return ppos, pneg
 
-def save(lines, f_out, ratio=-1, posneg=False):
+def save(lines, f_out, ratio=-1, posneg=False, ordered=False):
    def filename(ext):
       return "%s.%s" % (f_out[:-4] if f_out.endswith(".out") else f_out, ext)
 
@@ -109,7 +111,7 @@ def save(lines, f_out, ratio=-1, posneg=False):
    pneg = []
    if ratio >= 0:
        os.system('mkdir -p "%s"' % dirname)
-       ppos, pneg = extract_parents(pos, neg, other, ratio, posneg)
+       ppos, pneg = extract_parents(pos, neg, other, ratio, posneg, ordered)
  
    open(f_out,"w").write("\n".join(other)+"\n")
    if pos:
@@ -136,17 +138,17 @@ def make(d_outs, cores=4, msg="[POS/NEG]", chunksize=100, d_dst=None):
       outs = [(f,d_dst) for f in files if path.isfile(f)]
    par.apply(makeone, outs, cores=cores, barmsg=msg, chunksize=chunksize)
    
-def makeone_parents(f_out, f_pos, f_neg, f_ppos, f_pneg, ratio=-1, posneg=False, d_dst=None):
+def makeone_parents(f_out, f_pos, f_neg, f_ppos, f_pneg, ratio=-1, posneg=False, ordered=False, d_dst=None):
     pos = open(f_pos).read().strip().split("\n")
     neg = open(f_neg).read().strip().split("\n")
     other = open(f_out).read().strip().split("\n")
-    ppos, pneg = extract_parents(pos, neg, other, ratio, posneg)
+    ppos, pneg = extract_parents(pos, neg, other, ratio, posneg, ordered)
     if ppos:
        open(f_ppos,"w").write("\n".join(ppos)+"\n")
     if pneg:
        open(f_pneg,"w").write("\n".join(pneg)+"\n")
  
-def make_parents(d_outs, ratio=-1, posneg=False, cores=4, msg="[PPOS/PNEG]", chunksize=100, d_dst=None):
+def make_parents(d_outs, ratio=-1, posneg=False, ordered=False, cores=4, msg="[PPOS/PNEG]", chunksize=100, d_dst=None):
     outs = list()
     for d_out in d_outs:
         d_parent = path.join(d_out, "parents")
@@ -160,7 +162,7 @@ def make_parents(d_outs, ratio=-1, posneg=False, cores=4, msg="[PPOS/PNEG]", chu
                 if path.isfile(f_pos) and path.isfile(f_neg):
                     f_ppos = path.join(d_parent, "{}.pos".format(fname))
                     f_pneg = path.join(d_parent, "{}.neg".format(fname))
-                    outs.append((f_out, f_pos, f_neg, f_ppos, f_pneg, ratio, posneg, d_dst))
+                    outs.append((f_out, f_pos, f_neg, f_ppos, f_pneg, ratio, posneg, ordered, d_dst))
     par.apply(makeone_parents, outs, cores=cores, barmsg=msg, chunksize=chunksize)
     
 
